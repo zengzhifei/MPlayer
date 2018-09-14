@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>MPlayer</title>
+    <script src="../dist/MPlayer.min.js"></script>
+    <script src="http://page.ctvit.tv/jssdk/vconsole.min.js"></script>
+</head>
+<body>
+<div id="root" style="width: 100%;height: 220px;"></div>
+<script>
+    new VConsole()
+    let mPlayer = new MPlayer({
+        el: '#root',
+        video: {
+            src: './demo.mp4'
+        }
+    });
+    console.log(mPlayer);
+    setTimeout(function () {
+        mPlayer.config('video', {controls: false, a: 1});
+        console.log(mPlayer.config());
+    }, 3000);
+
+</script>
+</body>
+</html>

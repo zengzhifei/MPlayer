@@ -1,0 +1,106 @@
+#MPlayer {
+  @font: 16;
+  @fontSize: 16px;
+  @controlHeight: 40px;
+
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+
+  .MPlayer-player {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+  }
+
+  .MPlayer-player-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% - @controlHeight);
+  }
+
+  .MPlayer-player-control {
+    position: absolute;
+    height: @controlHeight;
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    background-color: #23272B;
+    transition: transform .5s ease-out, opacity .5s ease-out;
+  }
+
+  .MPlayer-control-left {
+    float: left;
+    height: 100%;
+  }
+
+  .MPlayer-control-video {
+    float: left;
+    width: 22px;
+    height: 100%;
+    margin-left: 14px;
+    cursor: pointer;
+    background-size: 100% !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .MPlayer-control-video-play {
+    background: url(../image/MPlayer-video-play.png) no-repeat 0;
+  }
+
+  .MPlayer-control-video-pause {
+    background: url(../image/MPlayer-video-pause.png) no-repeat 0;
+  }
+
+  .MPlayer-control-video-reload {
+    float: left;
+    width: 27px;
+    height: 100%;
+    margin-left: 14px;
+    cursor: pointer;
+    background: url(../image/MPlayer-video-reload.png) no-repeat 0;
+    background-size: 100% !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .MPlayer-control-not-active {
+    display: none;
+  }
+
+  .MPlayer-control-right {
+    float: right;
+    height: 100%;
+  }
+
+  .MPlayer-control-screen, .MPlayer-control-danmaku {
+    float: left;
+    width: 25px;
+    height: 100%;
+    margin-right: 14px;
+    cursor: pointer;
+    background-size: 100% !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .MPlayer-control-danmaku-open {
+    background: url(../image/MPlayer-danmaku-open.png) no-repeat 0;
+  }
+
+  .MPlayer-control-danmaku-close {
+    background: url(../image/MPlayer-danmaku-close.png) no-repeat 0;
+  }
+
+  .MPlayer-control-screen-full {
+    background: url(../image/MPlayer-screen-full.png) no-repeat 0;
+  }
+
+  .MPlayer-control-screen-middle {
+    background: url(../image/MPlayer-screen-middle.png) no-repeat 0;
+  }
+}
+
