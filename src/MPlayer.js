@@ -13,8 +13,7 @@ class MPlayer {
         this.MPlayer_ID = mPlayerCore.MPlayer_ID;
 
         if (options.el && utils.isString(options.el)) {
-            utils.mergeObject(mPlayerCore.configs, options);
-            mPlayerCore.initPlayer();
+            mPlayerCore.initPlayer(options);
         }
     }
 
@@ -29,6 +28,20 @@ class MPlayer {
             mPlayerCore.setOptions(name, value);
         }
     }
+
+    icon(iconType, iconClass, iconEvent) {
+        if (!utils.isString(iconType) || !mPlayerCore.icons.hasOwnProperty(iconType)) {
+            return mPlayerCore.icons;
+        } else {
+            return mPlayerCore.setIcon(iconType, iconClass, iconEvent);
+        }
+    }
+
+    addIcon(icon, iconEvent) {
+        return mPlayerCore.addIcon(icon, iconEvent);
+    }
+
+
 }
 
 export default MPlayer;
