@@ -18,9 +18,7 @@
     let mPlayer = new MPlayer({
         el: '#root',
         video: {
-            /*src: 'http://gzweb.ctvit.tv/ctvit_gz/Uploads/demo.mp4',
-            poster: '../src/image/MPlayer-danmaku-open.png',*/
-            currentTime: -10,
+            currentTime: 5,
             autoplay: false,
             controls: false,
             loop: false,
@@ -50,7 +48,7 @@
     let comment = mPlayer.icon('comment','icon-1',function () {
         console.log('comment');
     }).innerHTML = '点我评论';
-
+    
     let collect = mPlayer.icon('collect','icon-2',function () {
         console.log('collect');
     }).innerHTML = '点我收藏';
@@ -69,7 +67,7 @@
 
     /*let custom = mPlayer.addIcon('../src/image/MPlayer-custom-survey-icon-1.png',function () {
         console.log('custom');
-    }).innerHTML = '问卷调查';*/
+    }).innerHTML = '<span style="color: red">问卷调查</span>';*/
 
     let custom = mPlayer.addIcon('', function () {
         console.log('custom');
