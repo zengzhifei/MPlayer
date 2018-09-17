@@ -29,16 +29,20 @@ class MPlayer {
         }
     }
 
-    icon(iconType, iconClass, iconEvent) {
+    extend(iconType, iconClass, iconEvent) {
         if (!utils.isString(iconType) || !mPlayerCore.icons.hasOwnProperty(iconType)) {
             return mPlayerCore.icons;
         } else {
-            return mPlayerCore.setIcon(iconType, iconClass, iconEvent);
+            return mPlayerCore.setExtension(iconType, iconClass, iconEvent);
         }
     }
 
-    addIcon(icon, iconEvent) {
-        return mPlayerCore.addIcon(icon, iconEvent);
+    addExtension(icon, iconEvent) {
+        return mPlayerCore.addExtension(icon, iconEvent);
+    }
+
+    on(eventName, event) {
+        mPlayerCore.on(eventName, event);
     }
 
 

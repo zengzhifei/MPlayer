@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>MPlayer</title>
-    <script src="../dist/MPlayer.min.js?2"></script>
+    <script src="../dist/MPlayer.min.js?3"></script>
     <style>
         html, body {
             padding: 0;
@@ -18,7 +18,9 @@
     let mPlayer = new MPlayer({
         el: '#root',
         video: {
-            currentTime: 5,
+            src: 'http://gzweb.ctvit.tv/ctvit_gz/Uploads/demo.mp4',
+            poster: '../src/image/MPlayer-danmaku-open.png',
+            currentTime: 0,
             autoplay: false,
             controls: false,
             loop: false,
@@ -32,46 +34,55 @@
             backgroundColor: '',
         }
     });
+    /*
+        setTimeout(function () {
+            mPlayer.config({
+                video: {
+                    src: 'http://gzweb.ctvit.tv/ctvit_gz/Uploads/demo.mp4',
+                    poster: '../src/image/MPlayer-danmaku-open.png',
+                },
+            })
+        }, 3000);*/
 
-    setTimeout(function () {
-        mPlayer.config({
-            video: {
-                src: 'http://gzweb.ctvit.tv/ctvit_gz/Uploads/demo.mp4',
-                poster: '../src/image/MPlayer-danmaku-open.png',
-            },
-        })
-    }, 3000);
-
-    let icons = mPlayer.icon();
+    let icons = mPlayer.extend();
     console.log(icons);
 
-    let comment = mPlayer.icon('comment','icon-1',function () {
+    let comment = mPlayer.extend('comment', 'icon-1', function () {
         console.log('comment');
     }).innerHTML = '点我评论';
-    
-    let collect = mPlayer.icon('collect','icon-2',function () {
+
+    let collect = mPlayer.extend('collect', 'icon-2', function () {
         console.log('collect');
     }).innerHTML = '点我收藏';
 
-    /* let hits = mPlayer.icon('hits','icon-1',function () {
+    /* let hits = mPlayer.extend('hits','icon-1',function () {
          console.log('hits');
      }).innerHTML = '6999';*/
 
-    /*let upvote = mPlayer.icon('upvote','icon-1',function () {
+    /*let upvote = mPlayer.extend('upvote','icon-1',function () {
         console.log('upvote');
     }).innerHTML = '999';*/
 
-    /*let live = mPlayer.icon('live','icon-2',function () {
+    /*let live = mPlayer.extend('live','icon-2',function () {
         console.log('live');
     }).innerHTML = '电视直播中';*/
 
-    /*let custom = mPlayer.addIcon('../src/image/MPlayer-custom-survey-icon-1.png',function () {
+    /*let custom = mPlayer.addExtension('../src/image/MPlayer-custom-survey-icon-1.png',function () {
         console.log('custom');
     }).innerHTML = '<span style="color: red">问卷调查</span>';*/
 
-    let custom = mPlayer.addIcon('', function () {
+    let custom = mPlayer.addExtension('', function () {
         console.log('custom');
     }).innerHTML = '电视直播中...';
+
+    mPlayer.on({
+        'play': function () {
+            console.log('i am playing');
+        },
+        'pause': function () {
+            console.log('i am pausing');
+        }
+    });
 
 </script>
 </body>

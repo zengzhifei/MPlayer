@@ -45,6 +45,7 @@ let mPlayerCore = new class MPlayerCore {
             newPointer: -1,
             currentPointer: 0,
             danmakuSwitch: this.configs.controls.defaultDanmakuSwitch,
+            danmakuState: false,
         };
 
         this.client = {
@@ -87,10 +88,14 @@ let mPlayerCore = new class MPlayerCore {
     addDanmaku(options) {
         if (utils.isArray(options) && options.length) {
             this.danmaku.newPointer++;
+            if (!this.danmaku.danmakuState) {
+                this.danmaku.danmakuState = true;
+                this._displayDanmaku();
+            }
         }
     }
 
-    setIcon(iconType, iconClass = null, iconEvent) {
+    setExtension(iconType, iconClass = null, iconEvent) {
         if (utils.isString(iconType) && this.icons.hasOwnProperty(iconType)) {
             let custom = document.querySelector('.MPlayer-control-custom-' + iconType);
             if (utils.isString(iconClass) && this.icons[iconType].indexOf(iconClass) !== -1) {
@@ -110,7 +115,7 @@ let mPlayerCore = new class MPlayerCore {
         }
     }
 
-    addIcon(icon, iconEvent) {
+    addExtension(icon, iconEvent) {
         let iconHtml = [];
         iconHtml.push('<div class="MPlayer-control-custom">');
         icon && utils.isString(icon) && iconHtml.push('<div class="MPlayer-control-custom-icon"></div>');
@@ -130,6 +135,20 @@ let mPlayerCore = new class MPlayerCore {
         controlMiddle.lastChild.style.display = 'table';
 
         return controlMiddle.lastChild.lastChild;
+    }
+
+    on(eventName, event = null) {
+        let events = {};
+        let video = document.querySelector('.MPlayer-player-video');
+
+        if (utils.isString(eventName) && !utils.isNull(event)) {
+            events[eventName] = event;
+        } else if (utils.isObject(eventName)) {
+            events = eventName;
+        }
+        for (let _eventName in events) {
+            video.addEventListener(_eventName, events[_eventName], false);
+        }
     }
 
     _render() {
@@ -367,8 +386,51 @@ let mPlayerCore = new class MPlayerCore {
         return Math.round(danmaku.offsetHeight / 30);
     }
 
-    _displayDanmaku() {
+    _getDanmakuRowID = function () {
+        return (new Date()).getTime() + (Math.floor(Math.random() * 1000));
+    };
 
+    displayDanmaku() {
+        if (this.danmaku.currentPointer <= this.danmaku.newPointer) {
+            this._log(`第${this.danmaku.currentPointer}组开始`);
+            let danmaku = document.querySelector('.MPlayer-player-danmaku');
+            let currentDanmakuList = this.danmaku.danmakuList[this.danmaku.currentPointer];
+            let _displayDanmaku = (inwardPointer) => {
+                if (inwardPointer < currentDanmakuList.length) {
+                    this._log(`内部指针--${inwardPointer}`);
+                    let danmakuRowID = [];
+                    for (let j = 0, k = 1; j < this.configs.danmaku.maxRow; j++, k++) {
+                        if (inwardPointer + j < currentDanmakuList.length) {
+                            this._log(`第${inwardPointer + j}条`);
+                            danmakuRowID[j] = this._getDanmakuRowID();
+                            (function (i, j, k) {
+                                setTimeout(function () {
+                                    let danmakuRow = [];
+                                    danmakuRow.push(`<span class="MPlayer-danmaku-row" id="MPlayer-danmaku-id-${danmakuRowID[j]}">`);
+                                    if (currentDanmakuList[i + j]['img']) {
+                                        danmakuRow.push(`<img src="${currentDanmakuList[i + j]['img']}">`);
+                                    }
+                                    if (currentDanmakuList[i + j]['name']) {
+                                        danmakuRow.push(`${currentDanmakuList[i + j]['name']}：`);
+                                    }
+                                    if (currentDanmakuList[i + j]['text']) {
+                                        danmakuRow.push(currentDanmakuList[i + j]['text']);
+                                    }
+                                    let tempObj = document.createElement('div');
+                                    tempObj.innerHTML = danmakuRow.join('');
+                                    danmaku.appendChild(tempObj.children[0]);
+                                }, j * 200);
+                            })(inwardPointer, j, k);
+                        }
+                    }
+                }
+            };
+            _displayDanmaku(0);
+        }
+    }
+
+    _log(message) {
+        console.log(message);
     }
 };
 
