@@ -78,7 +78,7 @@ class MPlayerCore {
         }
     }
 
-    extend(type, icon = null, fn = null) {
+    extend(type = null, icon = null, fn = null) {
         if (utils.isString(type) && this.extends.hasOwnProperty(type)) {
             let extend = $(this.id).find('.MPlayer-control-middle').find('.MPlayer-control-custom-' + type);
             if (utils.isString(icon) && this.extends[type].indexOf(icon) !== -1) {
@@ -97,6 +97,8 @@ class MPlayerCore {
             } else {
                 extend.parent().addClass('MPlayer-control-not-active');
             }
+        } else if (utils.isNull(type)) {
+            return this.extends;
         }
     }
 

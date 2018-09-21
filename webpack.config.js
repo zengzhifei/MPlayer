@@ -1,6 +1,7 @@
 const PACKAGE = require('./package.json');
 const PATH = require('path');
 const WEBPACK = require('webpack');
+const SD = require('silly-datetime');
 
 module.exports = {
     mode: 'production',
@@ -50,7 +51,8 @@ module.exports = {
     plugins: [
         new WEBPACK.BannerPlugin([
             'MPlayer v' + PACKAGE.version + ' [' + PACKAGE.homepage + ']',
-            '@author ' + PACKAGE.author
+            '@author ' + PACKAGE.author,
+            '@date ' + SD.format(new Date(), 'YYYY-MM-DD HH:mm:ss')
         ].join('\n')),
         new WEBPACK.optimize.UglifyJsPlugin({
             compress: {

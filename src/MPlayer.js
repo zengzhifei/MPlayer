@@ -33,7 +33,7 @@ class MPlayer {
         }
     }
 
-    extend(type, icon = null, fn = null) {
+    extend(type = null, icon = null, fn = null) {
         return mPlayerInstance[this.id].extend(type, icon, fn);
     }
 
