@@ -2,12 +2,12 @@ import utils from "./utils.js";
 import tplMPlayer from "./html/MPlayer.html";
 import './css/MPlayer.less';
 
-let mPlayerCore = new class MPlayerCore {
-    constructor() {
-        this.root = null;
-        this.MPlayer_ID = '#MPlayer';
+class MPlayerCore {
+    constructor(id) {
+        this.id = id;
         this.configs = {
             el: '',
+            debug: false,
             video: {
                 autoplay: false,
                 controls: false,
@@ -18,19 +18,25 @@ let mPlayerCore = new class MPlayerCore {
                 currentTime: 0,
             },
             controls: {
-                defaultVideoSwitch: false,
                 defaultDanmakuSwitch: true,
                 defaultVoiceSwitch: true,
                 defaultScreenFull: false,
                 backgroundColor: '',
             },
             danmaku: {
+                maxRows: 3,
+                maxLength: 30,
+                speed: document.documentElement.clientWidth / 0.2,
+                easing: 'linear',
+                loop: false,
                 fontSize: 16,
-                maxRow: 3,
+                fontColor: '#FFF',
+                backgroundColor: 'rgba(179,179,115,0.6)',
+                myBackgroundColor: 'rgba(0,205,0,0.6)',
             }
         };
 
-        this.icons = {
+        this.extends = {
             'comment': ['icon-1', 'icon-2'],
             'collect': ['icon-1', 'icon-2'],
             'hits': ['icon-1', 'icon-2'],
@@ -38,117 +44,100 @@ let mPlayerCore = new class MPlayerCore {
             'live': ['icon-1', 'icon-2'],
         };
 
-        this.iconsEvent = {};
+        this.extendsFn = {};
 
         this.danmaku = {
             danmakuList: [],
             newPointer: -1,
             currentPointer: 0,
-            danmakuSwitch: this.configs.controls.defaultDanmakuSwitch,
             danmakuState: false,
+            danmakuSwitch: true,
         };
+    }
 
-        this.client = {
-            height: document.documentElement.clientHeight,
-            width: document.documentElement.clientWidth,
-            ratio: document.documentElement.clientHeight / document.documentElement.clientWidth
-        };
+    log(message) {
+        utils.isBoolean(this.configs.debug) && this.configs.debug && console.log(message);
     }
 
     initPlayer(options) {
-        if (!this.root && utils.isString(options.el) && (this.root = document.querySelector(options.el))) {
-            utils.mergeObject(mPlayerCore.configs, options);
+        $.extend(true, this.configs, options);
 
-            let playerObj = document.createElement('div');
-            playerObj.innerHTML = tplMPlayer;
-            this.root.appendChild(playerObj.children[0]);
-        } else {
-            return false;
-        }
+        $(this.configs.el).append(tplMPlayer).children('.MPlayer:last').attr('id', this.id.slice(1));
 
         this._bindEvents();
-        this._render();
-        this._display();
-    }
-
-    setOptions(name, value) {
-        if (utils.isObject(name)) {
-            utils.mergeObject(this.configs, name);
-        } else if (utils.isString(name)) {
-            if (utils.isObject(this.configs[name]) && utils.isObject(value)) {
-                utils.mergeObject(this.configs[name], value);
-            } else {
-                this.configs[name] = value;
-            }
-        }
-
         this._render();
     }
 
     addDanmaku(options) {
-        if (utils.isArray(options) && options.length) {
-            this.danmaku.newPointer++;
+        if (this.danmaku.danmakuSwitch && utils.isArray(options) && options.length) {
+            this.danmaku.danmakuList[++this.danmaku.newPointer] = options;
             if (!this.danmaku.danmakuState) {
                 this.danmaku.danmakuState = true;
-                this._displayDanmaku();
+                this._runDanmaku();
             }
         }
     }
 
-    setExtension(iconType, iconClass = null, iconEvent) {
-        if (utils.isString(iconType) && this.icons.hasOwnProperty(iconType)) {
-            let custom = document.querySelector('.MPlayer-control-custom-' + iconType);
-            if (utils.isString(iconClass) && this.icons[iconType].indexOf(iconClass) !== -1) {
-                this.iconsEvent.hasOwnProperty(iconType) ? custom.classList.remove(this.iconsEvent[iconType].iconClass) : this.iconsEvent[iconType] = {};
-                this.iconsEvent[iconType].iconClass = iconClass;
-                custom.classList.add('MPlayer-control-custom-' + iconType + '-' + iconClass);
+    extend(type, icon = null, fn = null) {
+        if (utils.isString(type) && this.extends.hasOwnProperty(type)) {
+            let extend = $(this.id).find('.MPlayer-control-middle').find('.MPlayer-control-custom-' + type);
+            if (utils.isString(icon) && this.extends[type].indexOf(icon) !== -1) {
+                if (this.extendsFn.hasOwnProperty(type)) {
+                    extend.removeClass('MPlayer-control-custom-' + type + '-' + this.extendsFn[type].icon);
+                } else {
+                    this.extendsFn[type] = {};
+                }
+                this.extendsFn[type].icon = icon;
+                extend.addClass('MPlayer-control-custom-' + type + '-' + icon);
+                fn && utils.isFunction(fn) && (extend[0].onclick = fn);
 
-                this.iconsEvent.hasOwnProperty(iconType) && this.iconsEvent[iconType].iconEvent ? custom.removeEventListener('click', this.iconsEvent[iconType].iconEvent, false) : this.iconsEvent[iconType].iconEvent = iconEvent;
-                iconEvent && (utils.isFunction(iconEvent) || utils.isString(iconEvent)) && custom.addEventListener('click', iconEvent, false);
+                extend.parent().removeClass('MPlayer-control-not-active');
 
-                custom.parentNode.style.display = 'table';
-
-                return custom.nextElementSibling;
+                return extend.siblings('.MPlayer-control-custom-desc').get(0);
             } else {
-                custom.parentElement.style.display = 'none';
+                extend.parent().addClass('MPlayer-control-not-active');
             }
         }
     }
 
-    addExtension(icon, iconEvent) {
-        let iconHtml = [];
-        iconHtml.push('<div class="MPlayer-control-custom">');
-        icon && utils.isString(icon) && iconHtml.push('<div class="MPlayer-control-custom-icon"></div>');
-        iconHtml.push('<div class="MPlayer-control-custom-desc"></div></div>');
-        iconHtml = iconHtml.join('');
+    addExtender(icon, fn = null) {
+        let custom = $(this.id).find('.MPlayer-control-middle');
+        let customHtml = [];
+        customHtml.push('<div class="MPlayer-control-custom">');
+        icon && utils.isString(icon) && customHtml.push(`<div class="MPlayer-control-custom-icon" style="background: url(${icon}) no-repeat 0"></div>`);
+        customHtml.push('<div class="MPlayer-control-custom-desc"></div>');
+        customHtml.push('</div>');
 
-        let controlMiddle = document.querySelector('.MPlayer-control-middle');
-        let tempObj = document.createElement('div');
-        tempObj.innerHTML = iconHtml;
-        controlMiddle.appendChild(tempObj.children[0]);
-
-        if (icon && utils.isString(icon)) {
-            controlMiddle.lastChild.firstChild.style.background = 'url(' + icon + ') no-repeat 0';
-            (utils.isFunction(iconEvent) || utils.isString(iconEvent)) && controlMiddle.lastChild.firstChild.addEventListener('click', iconEvent, false);
+        custom.append(customHtml.join(''));
+        if (icon && fn && utils.isString(icon) && utils.isFunction(fn)) {
+            custom.find('.MPlayer-control-custom:last').find('.MPlayer-control-custom-icon').get(0).addEventListener('click', fn, false);
         }
 
-        controlMiddle.lastChild.style.display = 'table';
-
-        return controlMiddle.lastChild.lastChild;
+        return custom.find('.MPlayer-control-custom:last').find('.MPlayer-control-custom-desc').get(0);
     }
 
-    on(eventName, event = null) {
-        let events = {};
-        let video = document.querySelector('.MPlayer-player-video');
+    on(event, fn = null) {
+        let video = $(this.id).find('.MPlayer-player-video');
+        if (event && utils.isString(event) && !utils.isNull(fn)) {
+            video[0].addEventListener(event, fn, false);
+        } else if (event && utils.isObject(event)) {
+            for (let eventName in event) {
+                if (event.hasOwnProperty(eventName)) {
+                    video[0].addEventListener(eventName, event[eventName], false);
+                }
+            }
+        }
+    }
 
-        if (utils.isString(eventName) && !utils.isNull(event)) {
-            events[eventName] = event;
-        } else if (utils.isObject(eventName)) {
-            events = eventName;
+    setConfig(name, value = null) {
+        if (name && utils.isString(name) && this.configs.hasOwnProperty(name)) {
+            $.extend(true, this.configs[name], value);
+        } else if (name && utils.isObject(name)) {
+            $.extend(true, this.configs, name);
+        } else {
+            return false;
         }
-        for (let _eventName in events) {
-            video.addEventListener(_eventName, events[_eventName], false);
-        }
+        this._render();
     }
 
     _render() {
@@ -163,155 +152,160 @@ let mPlayerCore = new class MPlayerCore {
         }
     }
 
-    _display() {
-        this._displayDanmaku();
-    }
-
     _renderVideo(options = {}) {
-        if (this.root) {
-            let video = document.querySelector('.MPlayer-player-video');
-
-            if (this._isWeChat()) {
-                video.setAttribute('x5-video-player-type', 'h5');
-                video.setAttribute('x5-video-orientation', 'landscape|portrait');
-                video.setAttribute('webkit-playsinline', true);
-                video.setAttribute('x-webkit-airplay', true);
-                video.setAttribute('playsinline', true);
-                video.setAttribute('x5-playsinline', true);
-            }
-
-            options.src && utils.isString(options.src) && (video.src = options.src);
-            options.poster && utils.isString(options.poster) && (video.poster = options.poster);
-            options.currentTime && utils.isNumber(options.currentTime) && (video.currentTime = options.currentTime);
-            utils.isBoolean(options.autoplay) && (video.autoplay = options.autoplay);
-            utils.isBoolean(options.loop) && (video.loop = options.loop);
-            utils.isBoolean(options.preload) && (video.preload = options.preload);
-            utils.isBoolean(options.controls) && (video.controls = options.controls);
-            video.controls ? document.querySelector('.MPlayer-control').style.display = 'none' : document.querySelector('.MPlayer-control').style.display = 'block';
+        let video = $(this.id).find('.MPlayer-player-video');
+        this._isWeChat() && video.attr({
+            'x5-video-player-type': 'h5',
+            'x5-video-orientation': 'landscape|portrait',
+            'webkit-playsinline': true,
+            'playsinline': true,
+            'x5-playsinline': true,
+            'x-webkit-airplay': true,
+            'x5-video-player-fullscreen': true,
+            'x5-video-ignore-metadata': true,
+        });
+        if (video[0].paused) {
+            video.attr(options);
+        } else {
+            $(this.id).find('.MPlayer-control-video-pause').click();
+            video.attr(options);
+            $(this.id).find('.MPlayer-control-video-play').click();
         }
     }
 
     _renderControls(options = {}) {
-        if (this.root) {
-            let play = document.querySelector('.MPlayer-control-video-play');
-            let pause = document.querySelector('.MPlayer-control-video-pause');
-            let reload = document.querySelector('.MPlayer-control-video-reload');
-            let openDanmaku = document.querySelector('.MPlayer-control-danmaku-open');
-            let closeDanmaku = document.querySelector('.MPlayer-control-danmaku-close');
-            let openVoice = document.querySelector('.MPlayer-control-voice-open');
-            let closeVoice = document.querySelector('.MPlayer-control-voice-close');
-            let fullScreen = document.querySelector('.MPlayer-control-screen-full');
-            let middleScreen = document.querySelector('.MPlayer-control-screen-middle');
-            let control = document.querySelector('.MPlayer-control');
-            let controlLeft = document.querySelector('.MPlayer-control-left');
-            let controlMiddle = document.querySelector('.MPlayer-control-middle');
-            let controlRight = document.querySelector('.MPlayer-control-right');
+        let video = $(this.id).find('.MPlayer-player-video'),
+            openDanmaku = $(this.id).find('.MPlayer-control-danmaku-open'),
+            closeDanmaku = $(this.id).find('.MPlayer-control-danmaku-close'),
+            openVoice = $(this.id).find('.MPlayer-control-voice-open'),
+            closeVoice = $(this.id).find('.MPlayer-control-voice-close'),
+            fullScreen = $(this.id).find('.MPlayer-control-screen-full'),
+            middleScreen = $(this.id).find('.MPlayer-control-screen-middle'),
+            control = $(this.id).find('.MPlayer-control'),
+            controlLeft = $(this.id).find('.MPlayer-control-left'),
+            controlMiddle = $(this.id).find('.MPlayer-control-middle'),
+            controlRight = $(this.id).find('.MPlayer-control-right');
 
-            utils.isBoolean(options.defaultVideoSwitch) && options.defaultVideoSwitch ? play.click() : pause.click();
-            utils.isBoolean(options.defaultScreenFull) && options.defaultScreenFull ? fullScreen.click() : middleScreen.click();
-            !utils.isBoolean(options.defaultDanmakuSwitch) || !options.defaultDanmakuSwitch ? openDanmaku.click() : closeDanmaku.click();
-            !utils.isBoolean(options.defaultVoiceSwitch) || !options.defaultVoiceSwitch ? openVoice.click() : closeVoice.click();
-            utils.isString(options.backgroundColor) && options.backgroundColor && (control.style.backgroundColor = options.backgroundColor);
-
-            controlMiddle.style.width = control.offsetWidth - controlLeft.offsetWidth - controlRight.offsetWidth + 'px';
+        if (video.get(0).controls) {
+            control.hide();
+        } else {
+            control.show();
         }
+        if (utils.isBoolean(options.defaultScreenFull) && options.defaultScreenFull) {
+            fullScreen.click();
+        } else {
+            middleScreen.click();
+        }
+        if (utils.isBoolean(options.defaultDanmakuSwitch) && !options.defaultDanmakuSwitch) {
+            openDanmaku.click()
+        } else {
+            closeDanmaku.click()
+        }
+        if (utils.isBoolean(options.defaultVoiceSwitch) && !options.defaultVoiceSwitch) {
+            openVoice.click();
+        } else {
+            closeVoice.click();
+        }
+        if (utils.isString(options.backgroundColor) && options.backgroundColor) {
+            control.css({backgroundColor: options.backgroundColor});
+        }
+
+        controlMiddle.css({width: control.width() - controlLeft.width() - controlRight.width()});
     }
 
     _renderDanmaku(options = {}) {
-        if (this.root) {
-            let danmaku = document.querySelector('.MPlayer-player-danmaku');
-
-            options.fontSize && utils.isNumber(options.fontSize) && (danmaku.style.fontSize = Math.abs(options.fontSize) + 'px');
-
-            this.configs.danmaku.maxRow = options.maxRow && utils.isNumber(options.maxRow) && options.maxRow <= this._getDanmakuMaxRow() ? options.maxRow : this._getDanmakuMaxRow();
-        }
+        let maxRows = Math.floor($(this.id).find('.MPlayer-player-danmaku').height() / ((options.fontSize || 16) + 10));
+        this.configs.danmaku.maxRows = utils.isNumber(options.maxRows) && Math.abs(options.maxRows) < maxRows ? Math.abs(options.maxRows) : maxRows;
     }
 
     _bindEvents() {
-        let that = this;
-        let video = document.querySelector('.MPlayer-player-video');
-        let play = document.querySelector('.MPlayer-control-video-play');
-        let pause = document.querySelector('.MPlayer-control-video-pause');
-        let reload = document.querySelector('.MPlayer-control-video-reload');
-        let openVoice = document.querySelector('.MPlayer-control-voice-open');
-        let closeVoice = document.querySelector('.MPlayer-control-voice-close');
-        let openDanmaku = document.querySelector('.MPlayer-control-danmaku-open');
-        let closeDanmaku = document.querySelector('.MPlayer-control-danmaku-close');
-        let fullScreen = document.querySelector('.MPlayer-control-screen-full');
-        let middleScreen = document.querySelector('.MPlayer-control-screen-middle');
+        let that = this,
+            player = $(this.id).find('.MPlayer-player'),
+            video = $(this.id).find('.MPlayer-player-video'),
+            danmaku = $(this.id).find('.MPlayer-player-danmaku'),
+            control = $(this.id).find('.MPlayer-control'),
+            play = $(this.id).find('.MPlayer-control-video-play'),
+            pause = $(this.id).find('.MPlayer-control-video-pause'),
+            reload = $(this.id).find('.MPlayer-control-video-reload'),
+            openVoice = $(this.id).find('.MPlayer-control-voice-open'),
+            closeVoice = $(this.id).find('.MPlayer-control-voice-close'),
+            openDanmaku = $(this.id).find('.MPlayer-control-danmaku-open'),
+            closeDanmaku = $(this.id).find('.MPlayer-control-danmaku-close'),
+            fullScreen = $(this.id).find('.MPlayer-control-screen-full'),
+            middleScreen = $(this.id).find('.MPlayer-control-screen-middle');
 
         // click video play btn
-        play.addEventListener('click', function () {
-            video.play();
+        play[0].addEventListener('click', function () {
+            video[0].play();
         }, false);
 
         // click video pause btn
-        pause.addEventListener('click', function () {
-            video.pause();
+        pause[0].addEventListener('click', function () {
+            video[0].pause();
         }, false);
 
         // click video reload btn
-        reload.addEventListener('click', function () {
-            video.load();
-            video.play();
+        reload[0].addEventListener('click', function () {
+            video[0].load();
+            video[0].play();
         }, false);
 
         // video on play
-        video.addEventListener('play', function () {
-            play.classList.add('MPlayer-control-not-active');
-            pause.classList.remove('MPlayer-control-not-active');
+        video[0].addEventListener('play', function () {
+            play.addClass('MPlayer-control-not-active');
+            pause.removeClass('MPlayer-control-not-active');
         }, false);
 
         // video on pause
-        video.addEventListener('pause', function () {
-            pause.classList.add('MPlayer-control-not-active');
-            play.classList.remove('MPlayer-control-not-active');
+        video[0].addEventListener('pause', function () {
+            pause.addClass('MPlayer-control-not-active');
+            play.removeClass('MPlayer-control-not-active');
         }, false);
 
         // click voice open btn
-        openVoice.addEventListener('click', function () {
-            this.classList.add('MPlayer-control-not-active');
-            closeVoice.classList.remove('MPlayer-control-not-active');
+        openVoice[0].addEventListener('click', function () {
+            openVoice.addClass('MPlayer-control-not-active');
+            closeVoice.removeClass('MPlayer-control-not-active');
 
             that._controlVoice(true);
         }, false);
 
         // click voice close btn
-        closeVoice.addEventListener('click', function () {
-            this.classList.add('MPlayer-control-not-active');
-            openVoice.classList.remove('MPlayer-control-not-active');
+        closeVoice[0].addEventListener('click', function () {
+            closeVoice.addClass('MPlayer-control-not-active');
+            openVoice.removeClass('MPlayer-control-not-active');
 
             that._controlVoice(false);
         }, false);
 
         // click danmaku open btn
-        openDanmaku.addEventListener('click', function () {
-            this.classList.add('MPlayer-control-not-active');
-            closeDanmaku.classList.remove('MPlayer-control-not-active');
+        openDanmaku[0].addEventListener('click', function () {
+            openDanmaku.addClass('MPlayer-control-not-active');
+            closeDanmaku.removeClass('MPlayer-control-not-active');
 
             that._controlDanmaku(false);
         }, false);
 
         // click danmaku close btn
-        closeDanmaku.addEventListener('click', function () {
-            this.classList.add('MPlayer-control-not-active');
-            openDanmaku.classList.remove('MPlayer-control-not-active');
+        closeDanmaku[0].addEventListener('click', function () {
+            closeDanmaku.addClass('MPlayer-control-not-active');
+            openDanmaku.removeClass('MPlayer-control-not-active');
 
             that._controlDanmaku(true);
         }, false);
 
         // click full screen btn
-        fullScreen.addEventListener('click', function () {
-            this.classList.add('MPlayer-control-not-active');
-            middleScreen.classList.remove('MPlayer-control-not-active');
+        fullScreen[0].addEventListener('click', function () {
+            fullScreen.addClass('MPlayer-control-not-active');
+            middleScreen.removeClass('MPlayer-control-not-active');
 
             that._updateScreen('portrait-full');
         }, false);
 
         // click middle screen btn
-        middleScreen.addEventListener('click', function () {
-            this.classList.add('MPlayer-control-not-active');
-            fullScreen.classList.remove('MPlayer-control-not-active');
+        middleScreen[0].addEventListener('click', function () {
+            middleScreen.addClass('MPlayer-control-not-active');
+            fullScreen.removeClass('MPlayer-control-not-active');
 
             that._updateScreen('portrait-middle');
         }, false);
@@ -319,10 +313,33 @@ let mPlayerCore = new class MPlayerCore {
         // listen screen change
         window.addEventListener("orientationchange", function () {
             if (window.orientation === 90 || window.orientation === -90) {
-                that._updateScreen('landscape-full');
+                fullScreen.hasClass('MPlayer-control-not-active') && that._updateScreen('landscape-full');
             } else if (window.orientation === 0 || window.orientation === 180) {
-                that._updateScreen('portrait-full');
+                fullScreen.hasClass('MPlayer-control-not-active') && that._updateScreen('portrait-full');
             }
+        }, false);
+
+        // click player layer
+        player[0].addEventListener('click', function () {
+            if ((window.orientation === 90 || window.orientation === -90) && fullScreen.hasClass('MPlayer-control-not-active')) {
+                if (control.is(':hidden')) {
+                    control.show() && control.data('controlTimer', setTimeout(function () {
+                        control.hide();
+                    }, 3000));
+                } else {
+                    control.hide() && clearInterval(control.data('controlTimer'));
+                }
+            }
+        }, false);
+
+        // listen x5 enter full screen
+        video[0].addEventListener('x5videoenterfullscreen', function () {
+            control.hide();
+        }, false);
+
+        // listen x5 exit full screen
+        video[0].addEventListener('x5videoexitfullscreen', function () {
+            control.show();
         }, false);
     }
 
@@ -332,106 +349,126 @@ let mPlayerCore = new class MPlayerCore {
     }
 
     _controlVoice(muted = true) {
-        let video = document.querySelector('.MPlayer-player-video');
-        muted ? video.muted = true : video.muted = false;
+        $(this.id).find('.MPlayer-player-video').get(0).muted = muted;
     }
 
     _controlDanmaku(danmakuSwitch = true) {
-        let danmaku = document.querySelector('.MPlayer-player-danmaku');
         if (danmakuSwitch) {
             this.danmaku.danmakuSwitch = true;
-            danmaku.style.display = 'block';
+            $(this.id).find('.MPlayer-player-danmaku').show();
         } else {
             this.danmaku.danmakuSwitch = false;
-            danmaku.style.display = 'none';
+            this.danmaku.danmakuState = false;
+            this.danmaku.currentPointer = 0;
+            this.danmaku.newPointer = -1;
+            this.danmaku.danmakuList = [];
+            $(this.id).find('.MPlayer-player-danmaku').empty().hide();
         }
     }
 
     _updateScreen(direction = 'portrait-full') {
-        let mPlayer = document.querySelectorAll('.MPlayer');
-        let mPlayerPlayer = document.querySelector('.MPlayer-player');
-        let mPlayerControl = document.querySelector('.MPlayer-control');
-
         switch (direction.toLowerCase()) {
-            //竖屏半屏
             case 'portrait-middle':
-                mPlayer.forEach(function (item, index) {
-                    item.classList.remove('MPlayer-fullScreen');
+                $(this.id).removeClass('MPlayer-fullScreen');
+                $(this.id).find('.MPlayer-player').css({
+                    height: $(this.configs.el).height() - $(this.id).find('.MPlayer-control').height(),
+                    top: 0
                 });
-                mPlayerPlayer.style.height = this.root.offsetHeight - mPlayerControl.offsetHeight + 'px';
-                mPlayerPlayer.style.top = '0px';
                 break;
-            //竖屏全屏
             case 'portrait-full':
-                mPlayer.forEach(function (item, index) {
-                    item.classList.add('MPlayer-fullScreen');
+                $(this.id).addClass('MPlayer-fullScreen');
+                $(this.id).find('.MPlayer-player').css({
+                    height: $(this.configs.el).height() - $(this.id).find('.MPlayer-control').height(),
+                    top: (screen.height - $(this.configs.el).height() - $(this.id).find('.MPlayer-control').height()) / 2
                 });
-                mPlayerPlayer.style.height = this.root.offsetHeight - mPlayerControl.offsetHeight + 'px';
-                mPlayerPlayer.style.top = (this.client.height - this.root.offsetHeight - mPlayerControl.offsetHeight) / 2 + 'px';
                 break;
-            //横屏全屏
             case 'landscape-full':
-                mPlayer.forEach(function (item, index) {
-                    item.classList.add('MPlayer-fullScreen');
+                $(this.id).addClass('MPlayer-fullScreen');
+                $(this.id).find('.MPlayer-player').css({
+                    height: screen.height,
+                    top: 0
                 });
-                mPlayerPlayer.style.height = '100%';
-                mPlayerPlayer.style.width = '100%';
-                mPlayerPlayer.style.top = '0px';
                 break;
         }
     }
 
-    _getDanmakuMaxRow() {
-        let danmaku = document.querySelector('.MPlayer-player-danmaku');
-        return Math.round(danmaku.offsetHeight / 30);
-    }
-
-    _getDanmakuRowID = function () {
-        return (new Date()).getTime() + (Math.floor(Math.random() * 1000));
-    };
-
-    displayDanmaku() {
+    _runDanmaku() {
         if (this.danmaku.currentPointer <= this.danmaku.newPointer) {
-            this._log(`第${this.danmaku.currentPointer}组开始`);
-            let danmaku = document.querySelector('.MPlayer-player-danmaku');
+            this.log(`第${this.danmaku.currentPointer}轮开始`);
             let currentDanmakuList = this.danmaku.danmakuList[this.danmaku.currentPointer];
-            let _displayDanmaku = (inwardPointer) => {
-                if (inwardPointer < currentDanmakuList.length) {
-                    this._log(`内部指针--${inwardPointer}`);
+            let run = (i) => {
+                if (i < currentDanmakuList.length) {
+                    this.log(`内部指针:${i}`);
                     let danmakuRowID = [];
-                    for (let j = 0, k = 1; j < this.configs.danmaku.maxRow; j++, k++) {
-                        if (inwardPointer + j < currentDanmakuList.length) {
-                            this._log(`第${inwardPointer + j}条`);
-                            danmakuRowID[j] = this._getDanmakuRowID();
-                            (function (i, j, k) {
-                                setTimeout(function () {
-                                    let danmakuRow = [];
-                                    danmakuRow.push(`<span class="MPlayer-danmaku-row" id="MPlayer-danmaku-id-${danmakuRowID[j]}">`);
-                                    if (currentDanmakuList[i + j]['img']) {
-                                        danmakuRow.push(`<img src="${currentDanmakuList[i + j]['img']}">`);
+                    for (let j = 0, k = 1; this.danmaku.danmakuSwitch && j < this.configs.danmaku.maxRows && i + j < currentDanmakuList.length; j++, k++) {
+                        this.log(`第${i + k}条`);
+                        danmakuRowID[j] = utils.getUniqueID();
+                        setTimeout(() => {
+                            let danmakuRow = `<span class="MPlayer-player-danmaku-row" id="MPlayer-player-danmaku-row-${danmakuRowID[j]}"></span>`;
+                            $(this.id).find('.MPlayer-player-danmaku').append(danmakuRow);
+
+                            if (currentDanmakuList[i + j]['name']) {
+                                $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).text(currentDanmakuList[i + j]['name'] + '：');
+                            }
+
+                            if (this.configs.danmaku.maxLength && utils.isNumber(this.configs.danmaku.maxLength)) {
+                                currentDanmakuList[i + j]['text'] = (currentDanmakuList[i + j]['text'] + '').substr(0, Math.abs(this.configs.danmaku.maxLength));
+                            }
+                            $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).append(currentDanmakuList[i + j]['text']).css({
+                                'color': currentDanmakuList[i + j]['fontColor'] || this.configs.danmaku.fontColor,
+                                'font-size': this.configs.danmaku.fontSize,
+                                'background-color': currentDanmakuList[i + j]['isMe'] && this.configs.danmaku.myBackgroundColor ? this.configs.danmaku.myBackgroundColor : this.configs.danmaku.backgroundColor,
+                            }).css({
+                                'top': ($(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).height() * j) + (j * 5),
+                                'line-height': $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).height() + 'px',
+                            });
+
+                            if (currentDanmakuList[i + j]['img']) {
+                                let danmakuRowHeight = $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).height();
+                                $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).prepend(`<img style="height: ${danmakuRowHeight}px;width: ${danmakuRowHeight}px;" src="${currentDanmakuList[i + j]['img']}">`);
+                            }
+
+                            let speedRatio = ($(this.id).find('.MPlayer-player-danmaku').width() + $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).width()) / $(this.id).find('.MPlayer-player-danmaku').width();
+                            $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).animate({
+                                left: -$(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).width() - 5
+                            }, (this.configs.danmaku.speed || 4000) * speedRatio, this.configs.danmaku.easing, function () {
+                                $(this).remove();
+                            });
+
+                            if ((k >= this.configs.danmaku.maxRows) || (i + k >= currentDanmakuList.length)) {
+                                let maxDanmakuWidthObj = $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[0]),
+                                    danmakuWidth = $(this.id).find('.MPlayer-player-danmaku').width();
+                                for (let m = 1; m < danmakuRowID.length; m++) {
+                                    maxDanmakuWidthObj = maxDanmakuWidthObj.width() > $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[m]).width() ? maxDanmakuWidthObj : $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[m]);
+                                }
+                                let danmakuTimer = setInterval(() => {
+                                    let nowPositionLeft = maxDanmakuWidthObj.css('left').replace(/px/ig, ''),
+                                        nowPosition = Number(nowPositionLeft) + Number(maxDanmakuWidthObj.width());
+                                    if (nowPosition / danmakuWidth <= 0.8) {
+                                        clearInterval(danmakuTimer);
+                                        if (i + k >= currentDanmakuList.length) {
+                                            this.danmaku.currentPointer++;
+                                            this._runDanmaku();
+                                        } else {
+                                            run(i + this.configs.danmaku.maxRows);
+                                        }
                                     }
-                                    if (currentDanmakuList[i + j]['name']) {
-                                        danmakuRow.push(`${currentDanmakuList[i + j]['name']}：`);
-                                    }
-                                    if (currentDanmakuList[i + j]['text']) {
-                                        danmakuRow.push(currentDanmakuList[i + j]['text']);
-                                    }
-                                    let tempObj = document.createElement('div');
-                                    tempObj.innerHTML = danmakuRow.join('');
-                                    danmaku.appendChild(tempObj.children[0]);
-                                }, j * 200);
-                            })(inwardPointer, j, k);
-                        }
+                                }, 100);
+                            }
+                        }, j * 200);
                     }
                 }
             };
-            _displayDanmaku(0);
+            run(0);
+        } else {
+            if (utils.isBoolean(this.configs.danmaku.loop) && this.configs.danmaku.loop) {
+                this.danmaku.currentPointer = 0;
+                this._runDanmaku();
+            } else {
+                this.danmaku.danmakuState = false;
+            }
         }
     }
+}
 
-    _log(message) {
-        console.log(message);
-    }
-};
-
-export default mPlayerCore;
+export default MPlayerCore;

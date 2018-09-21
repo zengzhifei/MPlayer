@@ -1,4 +1,4 @@
-#MPlayer {
+.MPlayer {
   @font: 16;
   @fontSize: 16px;
   @controlHeight: 40px;
@@ -18,19 +18,34 @@
   }
 
   .MPlayer-player-video {
+    float: left;
     position: absolute;
     width: 100%;
     height: 100%;
-    object-fit: fill;
-    vertical-align: middle;
-    float: left;
+    object-fit: cover;
+    object-position: center center;
   }
 
   .MPlayer-player-danmaku {
     position: absolute;
     width: 100%;
     height: 100%;
-    font-size: @fontSize;
+  }
+
+  .MPlayer-player-danmaku .MPlayer-player-danmaku-row {
+    position: absolute;
+    left: 100%;
+    white-space: nowrap;
+    display: inline-block;
+    padding-right: 4px;
+    border-radius: 15px;
+  }
+
+  .MPlayer-player-danmaku .MPlayer-player-danmaku-row img {
+    border-radius: 50%;
+    margin-left: 4px;
+    margin-right: 4px;
+    vertical-align: middle;
   }
 
   .MPlayer-control {
@@ -44,7 +59,7 @@
   }
 
   .MPlayer-control-not-active {
-    display: none;
+    display: none !important;
   }
 
   .MPlayer-control-left {
@@ -94,7 +109,7 @@
     text-align: center;
     height: 100%;
     margin-right: 14px;
-    display: none;
+    display: table;
   }
 
   .MPlayer-control-custom-icon {
@@ -197,4 +212,8 @@
 
 .MPlayer-fullScreen {
   position: fixed !important;
+  background-color: #474747;
+  top: 0;
+  left: 0;
+  z-index: 99999;
 }

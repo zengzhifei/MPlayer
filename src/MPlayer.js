@@ -1,51 +1,53 @@
 import pkg from "../package.json";
 import utils from "./utils.js";
-import mPlayerCore from "./MPlayerCore.js";
+import mPlayerInstance from "./MPlayerInstance.js";
 
 class MPlayer {
     constructor(options = {}) {
-        if (!!this.hasInit()) {
-            console.log('MPlayer is already init');
-            return;
+        if (typeof $ === 'undefined' && typeof jQuery === 'undefined') {
+            throw new Error('MPlayer must depend on jQuery');
+        } else {
+            window.$ = utils.isFunction($) ? $ : jQuery;
         }
 
         this.version = pkg.version;
-        this.MPlayer_ID = mPlayerCore.MPlayer_ID;
+        this.id = '#MPlayer-' + utils.getUniqueID();
 
         if (options.el && utils.isString(options.el)) {
-            mPlayerCore.initPlayer(options);
+            mPlayerInstance.set(this.id);
+            mPlayerInstance[this.id].initPlayer(options);
         }
     }
 
-    hasInit() {
-        return document.querySelector(mPlayerCore.MPlayer_ID);
+    addDanmaku(options = []) {
+        mPlayerInstance[this.id].addDanmaku(options);
     }
 
     config(name = null, value = null) {
-        if (utils.isNull(name) || (utils.isString(name) && utils.isNull(value))) {
-            return utils.isNull(name) ? mPlayerCore.configs : mPlayerCore.configs[name];
+        if (utils.isNull(name)) {
+            return mPlayerInstance[this.id].configs;
+        } else if (name && utils.isString(name) && utils.isNull(value)) {
+            return mPlayerInstance[this.id].configs[name];
         } else {
-            mPlayerCore.setOptions(name, value);
+            return mPlayerInstance[this.id].setConfig(name, value);
         }
     }
 
-    extend(iconType, iconClass, iconEvent) {
-        if (!utils.isString(iconType) || !mPlayerCore.icons.hasOwnProperty(iconType)) {
-            return mPlayerCore.icons;
-        } else {
-            return mPlayerCore.setExtension(iconType, iconClass, iconEvent);
-        }
+    extend(type, icon = null, fn = null) {
+        return mPlayerInstance[this.id].extend(type, icon, fn);
     }
 
-    addExtension(icon, iconEvent) {
-        return mPlayerCore.addExtension(icon, iconEvent);
+    addExtender(icon, fn = null) {
+        return mPlayerInstance[this.id].addExtender(icon, fn);
     }
 
-    on(eventName, event) {
-        mPlayerCore.on(eventName, event);
+    on(event, fn = null) {
+        mPlayerInstance[this.id].on(event, fn);
     }
 
-
+    getDanmakuStatus() {
+        return mPlayerInstance[this.id].danmaku.danmakuSwitch;
+    }
 }
 
 export default MPlayer;

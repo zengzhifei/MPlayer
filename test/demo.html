@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>MPlayer</title>
+    <script src="./lib/jquery-1.8.0.min.js"></script>
     <script src="../dist/MPlayer.min.js?3"></script>
     <style>
         html, body {
             padding: 0;
             margin: 0;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -17,9 +19,10 @@
 <script>
     let mPlayer = new MPlayer({
         el: '#root',
+        debug: false,
         video: {
-            src: 'http://gzweb.ctvit.tv/ctvit_gz/Uploads/demo.mp4',
-            poster: '../src/image/MPlayer-danmaku-open.png',
+            src: 'http://223.110.245.147/ott.js.chinamobile.com/PLTV/3/224/3221226799/index.m3u8',
+            poster: 'http://gzhoss.ctvit.tv/ctvit_gz/Uploads/Picture/Prog15231570297751000034/User15231784697691000037/2018-09-19/5ba1e47d36dc9.jpg',
             currentTime: 0,
             autoplay: false,
             controls: false,
@@ -27,63 +30,57 @@
             preload: false,
         },
         controls: {
-            defaultVideoSwitch: false,
             defaultDanmakuSwitch: true,
             defaultVoiceSwitch: true,
             defaultScreenFull: false,
             backgroundColor: '',
+        },
+        danmaku: {
+            maxRows: 3,
+            speed: document.documentElement.clientWidth / 0.2,
+            easing: 'linear',
+            loop: false,
+            fontSize: 16,
+            fontColor: '#FFF',
+            backgroundColor: 'rgba(179,179,115,0.6)',
+            myBackgroundColor: 'rgba(0,205,0,0.6)',
         }
     });
-    /*
-        setTimeout(function () {
-            mPlayer.config({
-                video: {
-                    src: 'http://gzweb.ctvit.tv/ctvit_gz/Uploads/demo.mp4',
-                    poster: '../src/image/MPlayer-danmaku-open.png',
-                },
-            })
-        }, 3000);*/
 
-    let icons = mPlayer.extend();
-    console.log(icons);
+    console.log(mPlayer.config());
 
-    let comment = mPlayer.extend('comment', 'icon-1', function () {
+    mPlayer.extend('comment', 'icon-1', function () {
         console.log('comment');
     }).innerHTML = '点我评论';
 
-    let collect = mPlayer.extend('collect', 'icon-2', function () {
-        console.log('collect');
-    }).innerHTML = '点我收藏';
-
-    /* let hits = mPlayer.extend('hits','icon-1',function () {
-         console.log('hits');
-     }).innerHTML = '6999';*/
-
-    /*let upvote = mPlayer.extend('upvote','icon-1',function () {
-        console.log('upvote');
-    }).innerHTML = '999';*/
-
-    /*let live = mPlayer.extend('live','icon-2',function () {
+    mPlayer.addExtender('', function () {
         console.log('live');
-    }).innerHTML = '电视直播中';*/
+    }).innerText = '电视直播中...';
 
-    /*let custom = mPlayer.addExtension('../src/image/MPlayer-custom-survey-icon-1.png',function () {
-        console.log('custom');
-    }).innerHTML = '<span style="color: red">问卷调查</span>';*/
+    setInterval(function () {
+        mPlayer.getDanmakuStatus() && getDanmakuList(mPlayer);
+    }, 1000);
 
-    let custom = mPlayer.addExtension('', function () {
-        console.log('custom');
-    }).innerHTML = '电视直播中...';
+    function getDanmakuList(player) {
+        let danmakuText = [
+            '今天去哪吃饭呀',
+            '喜欢杰伦的歌!!!',
+            '马上中秋节了，去哪玩呀aaaaaaa',
+            '他是不是傻呀',
+            '哈哈哈哈哈哈哈哈',
+            '这首歌我也会唱哦'
+        ], danmakuList = [];
 
-    mPlayer.on({
-        'play': function () {
-            console.log('i am playing');
-        },
-        'pause': function () {
-            console.log('i am pausing');
+        for (let i = 0, max = Math.floor(Math.random() * 10); i <= max; i++) {
+            danmakuList.push({
+                img: './demo.jpg',
+                name: 'van' + i,
+                text: danmakuText[Math.floor(Math.random() * danmakuText.length)]
+            });
         }
-    });
 
+        player.addDanmaku(danmakuList);
+    }
 </script>
 </body>
 </html>

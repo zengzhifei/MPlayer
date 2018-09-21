@@ -27,13 +27,11 @@ let utils = new class Utils {
         return Object.prototype.toString.call(value) === '[object Null]';
     }
 
-    mergeObject(target, source) {
-        if (utils.isObject(target) && utils.isObject(source)) {
-            for (let key in source) {
-                target[key] = target[key] && utils.isObject(target[key]) ? this.mergeObject(target[key], source[key]) : source[key];
-            }
-        }
-        return target;
+    getUniqueID() {
+        return (+new Date()).toString() + 'xxx9xxxy'.replace(/[xy]/g, function (c) {
+            let r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
     }
 };
 
