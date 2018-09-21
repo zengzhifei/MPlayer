@@ -212,7 +212,7 @@ class MPlayerCore {
             control.css({backgroundColor: options.backgroundColor});
         }
 
-        controlMiddle.css({width: control.width() - controlLeft.width() - controlRight.width()});
+        controlMiddle.css({width: control.width() - controlLeft.width() - controlRight.width() - 3});
     }
 
     _renderDanmaku(options = {}) {
