@@ -34,6 +34,7 @@ class MPlayerCore {
                 fontColor: '#FFF',
                 backgroundColor: 'rgba(179,179,115,0.6)',
                 myBackgroundColor: 'rgba(0,205,0,0.6)',
+                filterKeyWords: []
             }
         };
 
@@ -53,6 +54,7 @@ class MPlayerCore {
             currentPointer: 0,
             danmakuState: false,
             danmakuSwitch: true,
+            danmakuFilterRegExp: null,
         };
     }
 
@@ -71,7 +73,7 @@ class MPlayerCore {
 
     addDanmaku(options) {
         if (this.danmaku.danmakuSwitch && utils.isArray(options) && options.length) {
-            this.danmaku.danmakuList[++this.danmaku.newPointer] = options;
+            this.danmaku.danmakuList[++this.danmaku.newPointer] = this._filterDanmaku(options);
             if (!this.danmaku.danmakuState) {
                 this.danmaku.danmakuState = true;
                 this._runDanmaku();
@@ -141,6 +143,53 @@ class MPlayerCore {
             return false;
         }
         this._render();
+    }
+
+    controlVideo(status) {
+        switch (status) {
+            case 'play':
+                $(this.id).find('.MPlayer-control-video-play').trigger('click');
+                break;
+            case 'pause':
+                $(this.id).find('.MPlayer-control-video-pause').trigger('click');
+                break;
+            case 'reload':
+                $(this.id).find('.MPlayer-control-video-reload').trigger('click');
+                break;
+        }
+    }
+
+    controlVoice(status) {
+        switch (status) {
+            case 'open':
+                $(this.id).find('.MPlayer-control-voice-close').trigger('click');
+                break;
+            case 'close':
+                $(this.id).find('.MPlayer-control-voice-open').trigger('click');
+                break;
+        }
+    }
+
+    controlDanmaku(status) {
+        switch (status) {
+            case 'open':
+                $(this.id).find('.MPlayer-control-danmaku-close').trigger('click');
+                break;
+            case 'close':
+                $(this.id).find('.MPlayer-control-danmaku-open').trigger('click');
+                break;
+        }
+    }
+
+    controlScreen(status) {
+        switch (status) {
+            case 'full':
+                $(this.id).find('.MPlayer-control-screen-full').trigger('click');
+                break;
+            case 'middle':
+                $(this.id).find('.MPlayer-control-screen-middle').trigger('click');
+                break;
+        }
     }
 
     _render() {
@@ -225,6 +274,7 @@ class MPlayerCore {
     _renderDanmaku(options = {}) {
         let maxRows = Math.floor($(this.id).find('.MPlayer-player-danmaku').height() / ((options.fontSize || 16) + 10));
         this.configs.danmaku.maxRows = utils.isNumber(options.maxRows) && Math.abs(options.maxRows) < maxRows ? Math.abs(options.maxRows) : maxRows;
+        this.danmaku.danmakuFilterRegExp = utils.isArray(options.filterKeyWords) && options.filterKeyWords.length ? new RegExp(options.filterKeyWords.join('|')) : null;
     }
 
     _bindEvents() {
@@ -418,6 +468,22 @@ class MPlayerCore {
                 });
                 break;
         }
+    }
+
+    _filterDanmaku(options = []) {
+        let danmaku = [];
+        if (this.danmaku.danmakuFilterRegExp) {
+            for (let i = 0, len = options.length; i < len; i++) {
+                if (!(options[i].hasOwnProperty('name') && options[i].name.match(this.danmaku.danmakuFilterRegExp)) &&
+                    !(options[i].hasOwnProperty('text') && options[i].text.match(this.danmaku.danmakuFilterRegExp))
+                ) {
+                    danmaku.push(options[i]);
+                }
+            }
+        } else {
+            danmaku = options;
+        }
+        return danmaku;
     }
 
     _runDanmaku() {

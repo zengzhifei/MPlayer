@@ -86,6 +86,8 @@ Git下载：
                     backgroundColor: 'rgba(179,179,115,0.6)',
                     //弹幕个人显示背景颜色
                     myBackgroundColor: 'rgba(0,205,0,0.6)',
+                    //弹幕关键字过滤
+                    filterKeyWords:[]
                 }
         };
     </script>
@@ -167,6 +169,51 @@ Git下载：
         mPlayer.on(event,fn);
         //也支持以事件对象传入多个监听事件
         mPlayer.on({play:fn1,pause:fn2});
+        
+        /**
+         * 播放视频 
+         */
+        mPlayer.playVideo();
+        
+        /**
+         * 暂停视频 
+         */
+        mPlayer.pauseVideo();
+        
+        /**
+         * 重载视频 
+         */
+        mPlayer.reloadVideo();
+        
+         /**
+          * 开启声音 
+          */
+         mPlayer.openVoice();
+
+        /**
+         * 关闭声音
+         */
+        mPlayer.closeVoice();
+
+         /**
+          * 开启弹幕 
+          */
+         mPlayer.openDanmaku();
+
+        /**
+         * 关闭弹幕
+         */
+        mPlayer.closeDanmaku();
+        
+         /**
+          * 全屏播放
+          */
+         mPlayer.fullScreen();
+
+        /**
+         * 小窗播放
+         */
+        mPlayer.middleScreen();
     </script>
 ````
 

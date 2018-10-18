@@ -48,6 +48,42 @@ class MPlayer {
     getDanmakuStatus() {
         return mPlayerInstance[this.id].danmaku.danmakuSwitch;
     }
+
+    playVideo() {
+        mPlayerInstance[this.id].controlVideo('play');
+    }
+
+    pauseVideo() {
+        mPlayerInstance[this.id].controlVideo('pause');
+    }
+
+    reloadVideo() {
+        mPlayerInstance[this.id].controlVideo('reload');
+    }
+
+    openVoice() {
+        mPlayerInstance[this.id].controlVoice('open');
+    }
+
+    closeVoice() {
+        mPlayerInstance[this.id].controlVoice('close');
+    }
+
+    openDanmaku() {
+        mPlayerInstance[this.id].controlDanmaku('open');
+    }
+
+    closeDanmaku() {
+        mPlayerInstance[this.id].controlDanmaku('close');
+    }
+
+    fullScreen() {
+        mPlayerInstance[this.id].controlScreen('full');
+    }
+
+    middleScreen() {
+        mPlayerInstance[this.id].controlScreen('middle');
+    }
 }
 
 export default MPlayer;

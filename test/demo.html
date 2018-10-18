@@ -22,12 +22,15 @@
         debug: false,
         video: {
             //横屏视频
-            //src: 'http://mp4.vjshi.com/2018-06-07/29ab5d751e0d14a7b63c7ea3e287a688.mp4',
+            src: 'http://mp4.vjshi.com/2018-06-07/29ab5d751e0d14a7b63c7ea3e287a688.mp4',
             //竖屏视频
-            src: 'http://mp4.vjshi.com/2018-09-25/cf2acfd087f78e9374c43d0b4fff54e5.mp4',
+            //src: 'http://mp4.vjshi.com/2018-09-25/cf2acfd087f78e9374c43d0b4fff54e5.mp4',
         },
         controls: {
-            defaultVideoOrientation: 'portrait',
+            //defaultVideoOrientation: 'portrait',
+        },
+        danmaku: {
+            filterKeyWords: ['demo1']
         }
     });
 
@@ -44,6 +47,34 @@
     setInterval(function () {
         mPlayer.getDanmakuStatus() && getDanmakuList(mPlayer);
     }, 1000);
+
+    setTimeout(function () {
+        mPlayer.playVideo();
+        setTimeout(function () {
+            mPlayer.pauseVideo();
+            setTimeout(function () {
+                mPlayer.reloadVideo();
+                setTimeout(function () {
+                    mPlayer.closeVoice();
+                    setTimeout(function () {
+                        mPlayer.openVoice();
+                        setTimeout(function () {
+                            mPlayer.closeDanmaku();
+                            setTimeout(function () {
+                                mPlayer.openDanmaku();
+                                setTimeout(function () {
+                                    mPlayer.fullScreen();
+                                    setTimeout(function () {
+                                        mPlayer.middleScreen();
+                                    }, 2000);
+                                }, 2000);
+                            }, 2000);
+                        }, 2000);
+                    }, 2000);
+                }, 2000);
+            }, 2000);
+        }, 2000);
+    }, 2000);
 
     function getDanmakuList(player) {
         let danmakuText = [
