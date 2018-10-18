@@ -55,6 +55,8 @@ Git下载：
                 },
                 // 播放器控件配置
                 controls: {
+                    //设置默认视频源方向(landscape:水平,portrait:垂直，默认landscape)
+                    defaultVideoOrientation: 'landscape',
                     //是否默认显示弹幕开关
                     defaultDanmakuSwitch: true,
                     //是否默认显示声音开关

@@ -18,6 +18,7 @@ class MPlayerCore {
                 currentTime: 0,
             },
             controls: {
+                defaultVideoOrientation: 'landscape',
                 defaultDanmakuSwitch: true,
                 defaultVoiceSwitch: true,
                 defaultScreenFull: false,
@@ -169,9 +170,9 @@ class MPlayerCore {
         if (video[0].paused) {
             video.attr(options);
         } else {
-            $(this.id).find('.MPlayer-control-video-pause').click();
+            $(this.id).find('.MPlayer-control-video-pause').trigger('click');
             video.attr(options);
-            $(this.id).find('.MPlayer-control-video-play').click();
+            $(this.id).find('.MPlayer-control-video-play').trigger('click');
         }
     }
 
@@ -188,31 +189,37 @@ class MPlayerCore {
             controlMiddle = $(this.id).find('.MPlayer-control-middle'),
             controlRight = $(this.id).find('.MPlayer-control-right');
 
+        controlMiddle.css({width: control.width() - controlLeft.width() - controlRight.width() - 3});
+
         if (video.get(0).controls) {
-            control.hide();
+            $(this.id).addClass('MPlayer-default');
         } else {
-            control.show();
+            $(this.id).removeClass('MPlayer-default');
+        }
+        if (options.defaultVideoOrientation === 'portrait') {
+            options.defaultScreenFull = true;
+            video.data('orientation', 'portrait');
+        } else {
+            video.data('orientation', 'landscape');
         }
         if (utils.isBoolean(options.defaultScreenFull) && options.defaultScreenFull) {
-            fullScreen.click();
+            fullScreen.trigger('click');
         } else {
-            middleScreen.click();
+            middleScreen.trigger('click');
         }
         if (utils.isBoolean(options.defaultDanmakuSwitch) && !options.defaultDanmakuSwitch) {
-            openDanmaku.click()
+            openDanmaku.trigger('click');
         } else {
-            closeDanmaku.click()
+            closeDanmaku.trigger('click');
         }
         if (utils.isBoolean(options.defaultVoiceSwitch) && !options.defaultVoiceSwitch) {
-            openVoice.click();
+            openVoice.trigger('click');
         } else {
-            closeVoice.click();
+            closeVoice.trigger('click');
         }
         if (utils.isString(options.backgroundColor) && options.backgroundColor) {
             control.css({backgroundColor: options.backgroundColor});
         }
-
-        controlMiddle.css({width: control.width() - controlLeft.width() - controlRight.width() - 3});
     }
 
     _renderDanmaku(options = {}) {
@@ -225,6 +232,7 @@ class MPlayerCore {
             player = $(this.id).find('.MPlayer-player'),
             video = $(this.id).find('.MPlayer-player-video'),
             danmaku = $(this.id).find('.MPlayer-player-danmaku'),
+            state = $(this.id).find('.MPlayer-player-state'),
             control = $(this.id).find('.MPlayer-control'),
             play = $(this.id).find('.MPlayer-control-video-play'),
             pause = $(this.id).find('.MPlayer-control-video-pause'),
@@ -235,6 +243,11 @@ class MPlayerCore {
             closeDanmaku = $(this.id).find('.MPlayer-control-danmaku-close'),
             fullScreen = $(this.id).find('.MPlayer-control-screen-full'),
             middleScreen = $(this.id).find('.MPlayer-control-screen-middle');
+
+        // click state btn
+        player[0].addEventListener('click', function (e) {
+            video[0].paused ? video[0].play() : (state.is(":hidden") ? state.stop(true).show().delay(3000).fadeOut() : video[0].pause());
+        }, false);
 
         // click video play btn
         play[0].addEventListener('click', function () {
@@ -256,12 +269,14 @@ class MPlayerCore {
         video[0].addEventListener('play', function () {
             play.addClass('MPlayer-control-not-active');
             pause.removeClass('MPlayer-control-not-active');
+            state.removeClass('MPlayer-player-state-play').addClass('MPlayer-player-state-pause').delay(3000).fadeOut();
         }, false);
 
         // video on pause
         video[0].addEventListener('pause', function () {
             pause.addClass('MPlayer-control-not-active');
             play.removeClass('MPlayer-control-not-active');
+            state.removeClass('MPlayer-player-state-pause').addClass('MPlayer-player-state-play').stop(true).show();
         }, false);
 
         // click voice open btn
@@ -298,32 +313,32 @@ class MPlayerCore {
 
         // click full screen btn
         fullScreen[0].addEventListener('click', function () {
-            fullScreen.addClass('MPlayer-control-not-active');
-            middleScreen.removeClass('MPlayer-control-not-active');
-
-            that._updateScreen('portrait-full');
+            if (video.data('orientation') === 'portrait') {
+                control.hide();
+                fullScreen.addClass('MPlayer-control-not-active');
+                middleScreen.addClass('MPlayer-control-not-active');
+                that._updateScreen('landscape-full');
+            } else {
+                control.hide();
+                fullScreen.addClass('MPlayer-control-not-active');
+                middleScreen.removeClass('MPlayer-control-not-active');
+                that._updateScreen('portrait-full');
+            }
         }, false);
 
         // click middle screen btn
         middleScreen[0].addEventListener('click', function () {
+            clearInterval(control.data('controlTimer'));
+            control.show();
             middleScreen.addClass('MPlayer-control-not-active');
             fullScreen.removeClass('MPlayer-control-not-active');
 
             that._updateScreen('portrait-middle');
         }, false);
 
-        // listen screen change
-        window.addEventListener("orientationchange", function () {
-            if (window.orientation === 90 || window.orientation === -90) {
-                fullScreen.hasClass('MPlayer-control-not-active') && that._updateScreen('landscape-full');
-            } else if (window.orientation === 0 || window.orientation === 180) {
-                fullScreen.hasClass('MPlayer-control-not-active') && that._updateScreen('portrait-full');
-            }
-        }, false);
-
         // click player layer
         player[0].addEventListener('click', function () {
-            if ((window.orientation === 90 || window.orientation === -90) && fullScreen.hasClass('MPlayer-control-not-active')) {
+            if (fullScreen.hasClass('MPlayer-control-not-active')) {
                 if (control.is(':hidden')) {
                     control.show() && control.data('controlTimer', setTimeout(function () {
                         control.hide();
@@ -334,14 +349,25 @@ class MPlayerCore {
             }
         }, false);
 
+        // listen screen change
+        window.addEventListener("orientationchange", function () {
+            if (video.data('orientation') !== 'portrait') {
+                if (window.orientation === 90 || window.orientation === -90) {
+                    fullScreen.hasClass('MPlayer-control-not-active') && that._updateScreen('landscape-full');
+                } else if (window.orientation === 0 || window.orientation === 180) {
+                    fullScreen.hasClass('MPlayer-control-not-active') && that._updateScreen('portrait-full');
+                }
+            }
+        }, false);
+
         // listen x5 enter full screen
         video[0].addEventListener('x5videoenterfullscreen', function () {
-            control.hide();
+            // todo
         }, false);
 
         // listen x5 exit full screen
         video[0].addEventListener('x5videoexitfullscreen', function () {
-            control.show();
+            // todo
         }, false);
     }
 

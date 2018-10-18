@@ -15,6 +15,7 @@
     height: calc(100% - @controlHeight);
     left: 0;
     top: 0;
+    overflow: hidden;
   }
 
   .MPlayer-player-video {
@@ -24,6 +25,21 @@
     height: 100%;
     object-fit: cover;
     object-position: center center;
+  }
+
+  .MPlayer-player-state {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-size: 55px !important;
+  }
+
+  .MPlayer-player-state-play {
+    background: url(../image/MPlayer-play.png) no-repeat center;
+  }
+
+  .MPlayer-player-state-pause {
+    background: url(../image/MPlayer-pause.png) no-repeat center;
   }
 
   .MPlayer-player-danmaku {
@@ -217,4 +233,8 @@
   top: 0;
   left: 0;
   z-index: 99999;
+}
+
+.MPlayer-default .MPlayer-player-state, .MPlayer-default .MPlayer-control {
+  display: none !important;
 }
