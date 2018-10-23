@@ -214,6 +214,20 @@ Git下载：
          * 小窗播放
          */
         mPlayer.middleScreen();
+        
+         /**
+          * 获取video属性
+          * @param name 属性名
+          * @return 属性
+          */
+         mPlayer.getVideo(name);
+         
+         /**
+          * 设置video属性
+          * @param name 属性名
+          * @param value 属性值
+          */
+         mPlayer.setVideo(name,value);
     </script>
 ````
 
