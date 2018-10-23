@@ -1,6 +1,6 @@
 {
   "name": "mplayer",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A danmaku player plugin for mobile",
   "main": "dist/MPlayer.min.js",
   "scripts": {
