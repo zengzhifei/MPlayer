@@ -192,6 +192,13 @@ class MPlayerCore {
         }
     }
 
+    operateVideo(name, value = null) {
+        if (name && utils.isString(name)) {
+            let video = $(this.id).find('.MPlayer-player-video');
+            return utils.isNull(value) ? video.get(0)[name] : video.get(0)[name] = value;
+        }
+    }
+
     _render() {
         if (utils.isObject(this.configs.video)) {
             this._renderVideo(this.configs.video);

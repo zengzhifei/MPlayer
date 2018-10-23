@@ -84,6 +84,14 @@ class MPlayer {
     middleScreen() {
         mPlayerInstance[this.id].controlScreen('middle');
     }
+
+    getVideo(name) {
+        return mPlayerInstance[this.id].operateVideo(name);
+    }
+
+    setVideo(name, value) {
+        return mPlayerInstance[this.id].operateVideo(name, value);
+    }
 }
 
 export default MPlayer;
