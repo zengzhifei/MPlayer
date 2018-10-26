@@ -213,7 +213,7 @@ class MPlayerCore {
 
     _renderVideo(options = {}) {
         let video = $(this.id).find('.MPlayer-player-video');
-        this._isWeChat() && video.attr({
+        video.attr({
             'x5-video-player-type': 'h5',
             'x5-video-orientation': 'landscape|portrait',
             'webkit-playsinline': true,
@@ -508,25 +508,29 @@ class MPlayerCore {
                             let danmakuRow = `<span class="MPlayer-player-danmaku-row" id="MPlayer-player-danmaku-row-${danmakuRowID[j]}"></span>`;
                             $(this.id).find('.MPlayer-player-danmaku').append(danmakuRow);
 
+                            let operateDanmakuRow = $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]);
+
                             if (currentDanmakuList[i + j]['name']) {
-                                $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).text(currentDanmakuList[i + j]['name'] + '：');
+                                operateDanmakuRow.text(currentDanmakuList[i + j]['name'] + '：');
+                            }
+                            if (this.configs.danmaku.maxLength && utils.isNumber(this.configs.danmaku.maxLength)) {
+                                currentDanmakuList[i + j]['text'] = (currentDanmakuList[i + j]['text'] + '').length <= this.configs.danmaku.maxLength ? currentDanmakuList[i + j]['text'] : (currentDanmakuList[i + j]['text'] + '').substr(0, Math.abs(this.configs.danmaku.maxLength)) + '...';
                             }
 
-                            if (this.configs.danmaku.maxLength && utils.isNumber(this.configs.danmaku.maxLength)) {
-                                currentDanmakuList[i + j]['text'] = (currentDanmakuList[i + j]['text'] + '').substr(0, Math.abs(this.configs.danmaku.maxLength));
-                            }
-                            $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).append(currentDanmakuList[i + j]['text']).css({
+                            operateDanmakuRow.append(currentDanmakuList[i + j]['text']).css({
                                 'color': currentDanmakuList[i + j]['fontColor'] || this.configs.danmaku.fontColor,
                                 'font-size': this.configs.danmaku.fontSize,
                                 'background-color': currentDanmakuList[i + j]['isMe'] && this.configs.danmaku.myBackgroundColor ? this.configs.danmaku.myBackgroundColor : this.configs.danmaku.backgroundColor,
-                            }).css({
-                                'top': ($(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).height() * j) + (j * 5),
-                                'line-height': $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).height() + 'px',
                             });
 
+                            let operateDanmakuRowHeight = operateDanmakuRow.height();
+
+                            operateDanmakuRow.css({
+                                'top': (operateDanmakuRowHeight * j) + (j * 5),
+                                'line-height': operateDanmakuRowHeight + 'px',
+                            });
                             if (currentDanmakuList[i + j]['img']) {
-                                let danmakuRowHeight = $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).height();
-                                $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).prepend(`<img style="height: ${danmakuRowHeight}px;width: ${danmakuRowHeight}px;" src="${currentDanmakuList[i + j]['img']}">`);
+                                $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).prepend(`<img style="height: ${operateDanmakuRowHeight}px;width: ${operateDanmakuRowHeight}px;" src="${currentDanmakuList[i + j]['img']}">`);
                             }
 
                             let speedRatio = ($(this.id).find('.MPlayer-player-danmaku').width() + $(this.id).find('#MPlayer-player-danmaku-row-' + danmakuRowID[j]).width()) / $(this.id).find('.MPlayer-player-danmaku').width();

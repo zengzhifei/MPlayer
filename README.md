@@ -72,8 +72,8 @@ Git下载：
                     maxRows: 3,
                     //最大显示长度
                     maxLength: 30,
-                    //弹幕滚动速度
-                    speed: 2000,
+                    //弹幕滚动速度，建议不配置，插件会自动计算
+                    speed: 4000,
                     //弹幕滚动方式，linear:匀速 swing：非匀速
                     easing: 'linear',
                     //是否循环弹幕列表
@@ -124,7 +124,7 @@ Git下载：
         
         /**
          * 添加弹幕列表
-         * param: options[array] 弹幕列表：img:头像 name:名称 text:内容,fontColor:字体颜色
+         * param: options[array] 弹幕列表：img:头像 name:名称 text:内容,fontColor:字体颜色,isMe:是否是本人
          * return object
          */
         mPlayer.addDanmaku(options);

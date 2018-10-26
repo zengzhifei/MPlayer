@@ -29,9 +29,6 @@
         controls: {
             //defaultVideoOrientation: 'portrait',
         },
-        danmaku: {
-            filterKeyWords: ['demo1']
-        }
     });
 
     console.log(mPlayer);
@@ -48,42 +45,42 @@
         mPlayer.getDanmakuStatus() && getDanmakuList(mPlayer);
     }, 1000);
 
-    setTimeout(function () {
-        mPlayer.playVideo();
-        setTimeout(function () {
-            mPlayer.pauseVideo();
-            setTimeout(function () {
-                mPlayer.reloadVideo();
-                setTimeout(function () {
-                    mPlayer.closeVoice();
-                    setTimeout(function () {
-                        mPlayer.openVoice();
-                        setTimeout(function () {
-                            mPlayer.closeDanmaku();
-                            setTimeout(function () {
-                                mPlayer.openDanmaku();
-                                setTimeout(function () {
-                                    mPlayer.fullScreen();
-                                    setTimeout(function () {
-                                        mPlayer.middleScreen();
-                                    }, 2000);
-                                }, 2000);
-                            }, 2000);
-                        }, 2000);
-                    }, 2000);
-                }, 2000);
-            }, 2000);
-        }, 2000);
-    }, 2000);
+    /*  setTimeout(function () {
+          mPlayer.playVideo();
+          setTimeout(function () {
+              mPlayer.pauseVideo();
+              setTimeout(function () {
+                  mPlayer.reloadVideo();
+                  setTimeout(function () {
+                      mPlayer.closeVoice();
+                      setTimeout(function () {
+                          mPlayer.openVoice();
+                          setTimeout(function () {
+                              mPlayer.closeDanmaku();
+                              setTimeout(function () {
+                                  mPlayer.openDanmaku();
+                                  setTimeout(function () {
+                                      mPlayer.fullScreen();
+                                      setTimeout(function () {
+                                          mPlayer.middleScreen();
+                                      }, 2000);
+                                  }, 2000);
+                              }, 2000);
+                          }, 2000);
+                      }, 2000);
+                  }, 2000);
+              }, 2000);
+          }, 2000);
+      }, 2000);*/
 
     function getDanmakuList(player) {
         let danmakuText = [
             '今天去哪吃饭呀',
             '喜欢杰伦的歌!!!',
-            '马上中秋节了，去哪玩呀',
-            '他是不是傻呀',
-            '哈哈哈哈哈哈哈哈',
-            '这首歌我也会唱哦'
+            '马上中秋节了，去哪玩呀,马上中秋节了,测试测试测试测试',
+            '马上中秋节了，去哪玩呀,马上中秋节了,测试测试测试测试测试',
+            '马上中秋节了，去哪玩呀,马上中秋节了,测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试测试',
+
         ], danmakuList = [];
 
         for (let i = 0, max = Math.floor(Math.random() * 10); i <= max; i++) {
