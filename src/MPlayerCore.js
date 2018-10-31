@@ -27,7 +27,7 @@ class MPlayerCore {
             danmaku: {
                 maxRows: 3,
                 maxLength: 30,
-                speed: document.documentElement.clientWidth / 0.2,
+                speed: 0,
                 easing: 'linear',
                 loop: false,
                 fontSize: 16,
@@ -56,6 +56,20 @@ class MPlayerCore {
             danmakuSwitch: true,
             danmakuFilterRegExp: null,
         };
+
+        if (this.isIOS()) {
+            this.screen = {
+                width: (window.orientation === 0 || window.orientation === 180 ? $(window).width() : screen.width),
+                height: (window.orientation === 0 || window.orientation === 180 ? $(window).height() : screen.height - (screen.width - $(window).height())),
+                toolBarHeight: (window.orientation === 0 || window.orientation === 180 ? screen.height - $(window).height() : screen.width - $(window).height())
+            };
+        } else {
+            this.screen = {
+                width: (window.orientation === 0 || window.orientation === 180 ? $(window).width() : screen.height),
+                height: (window.orientation === 0 || window.orientation === 180 ? $(window).height() : screen.width - (screen.height - $(window).height())),
+                toolBarHeight: (window.orientation === 0 || window.orientation === 180 ? screen.height - $(window).height() : screen.height - $(window).height())
+            };
+        }
     }
 
     log(message) {
@@ -281,6 +295,7 @@ class MPlayerCore {
     _renderDanmaku(options = {}) {
         let maxRows = Math.floor($(this.id).find('.MPlayer-player-danmaku').height() / ((options.fontSize || 16) + 10));
         this.configs.danmaku.maxRows = utils.isNumber(options.maxRows) && Math.abs(options.maxRows) < maxRows ? Math.abs(options.maxRows) : maxRows;
+        this.configs.danmaku.speed = utils.isNumber(options.speed) && Math.abs(options.speed) > 0 ? Math.abs(options.speed) : $(this.id).width() / 0.2;
         this.danmaku.danmakuFilterRegExp = utils.isArray(options.filterKeyWords) && options.filterKeyWords.length ? new RegExp(options.filterKeyWords.join('|')) : null;
     }
 
@@ -302,9 +317,21 @@ class MPlayerCore {
             middleScreen = $(this.id).find('.MPlayer-control-screen-middle');
 
         // click state btn
-        player[0].addEventListener('click', function (e) {
-            video[0].paused ? video[0].play() : (state.is(":hidden") ? state.stop(true).show().delay(3000).fadeOut() : video[0].pause());
-        }, false);
+        state[0].addEventListener('click', function () {
+            if (video[0].paused) {
+                video[0].play();
+            } else {
+                if (state.hasClass('MPlayer-player-state-pause')) {
+                    video[0].pause();
+                } else {
+                    clearTimeout(state.data('MPlayer-state-timer'));
+                    state.removeClass('MPlayer-player-state-play').addClass('MPlayer-player-state-pause');
+                    state.data('MPlayer-state-timer', setTimeout(function () {
+                        state.removeClass('MPlayer-player-state-pause');
+                    }, 3000));
+                }
+            }
+        });
 
         // click video play btn
         play[0].addEventListener('click', function () {
@@ -326,14 +353,21 @@ class MPlayerCore {
         video[0].addEventListener('play', function () {
             play.addClass('MPlayer-control-not-active');
             pause.removeClass('MPlayer-control-not-active');
-            state.removeClass('MPlayer-player-state-play').addClass('MPlayer-player-state-pause').delay(3000).fadeOut();
+
+            clearTimeout(state.data('MPlayer-state-timer'));
+            state.removeClass('MPlayer-player-state-play').addClass('MPlayer-player-state-pause');
+            state.data('MPlayer-state-timer', setTimeout(function () {
+                state.removeClass('MPlayer-player-state-pause');
+            }, 3000));
         }, false);
 
         // video on pause
         video[0].addEventListener('pause', function () {
             pause.addClass('MPlayer-control-not-active');
             play.removeClass('MPlayer-control-not-active');
-            state.removeClass('MPlayer-player-state-pause').addClass('MPlayer-player-state-play').stop(true).show();
+
+            clearTimeout(state.data('MPlayer-state-timer'));
+            state.removeClass('MPlayer-player-state-pause').addClass('MPlayer-player-state-play');
         }, false);
 
         // click voice open btn
@@ -385,7 +419,7 @@ class MPlayerCore {
 
         // click middle screen btn
         middleScreen[0].addEventListener('click', function () {
-            clearInterval(control.data('controlTimer'));
+            clearInterval(control.data('MPlayer-control-timer'));
             control.show();
             middleScreen.addClass('MPlayer-control-not-active');
             fullScreen.removeClass('MPlayer-control-not-active');
@@ -397,17 +431,17 @@ class MPlayerCore {
         player[0].addEventListener('click', function () {
             if (fullScreen.hasClass('MPlayer-control-not-active')) {
                 if (control.is(':hidden')) {
-                    control.show() && control.data('controlTimer', setTimeout(function () {
+                    control.show() && control.data('MPlayer-control-timer', setTimeout(function () {
                         control.hide();
                     }, 3000));
                 } else {
-                    control.hide() && clearInterval(control.data('controlTimer'));
+                    control.hide() && clearInterval(control.data('MPlayer-control-timer'));
                 }
             }
         }, false);
 
         // listen screen change
-        window.addEventListener("orientationchange", function () {
+        window.addEventListener("orientationchange", function (e) {
             if (video.data('orientation') !== 'portrait') {
                 if (window.orientation === 90 || window.orientation === -90) {
                     fullScreen.hasClass('MPlayer-control-not-active') && that._updateScreen('landscape-full');
@@ -431,6 +465,11 @@ class MPlayerCore {
     _isWeChat() {
         let ua = navigator.userAgent.toLowerCase();
         return ua.indexOf('micromessenger') > -1;
+    }
+
+    isIOS() {
+        let ua = navigator.userAgent.toLowerCase();
+        return /iphone|ipad|ipod/.test(ua);
     }
 
     _controlVoice(muted = true) {
@@ -464,13 +503,13 @@ class MPlayerCore {
                 $(this.id).addClass('MPlayer-fullScreen');
                 $(this.id).find('.MPlayer-player').css({
                     height: $(this.configs.el).height() - $(this.id).find('.MPlayer-control').height(),
-                    top: (screen.height - $(this.configs.el).height() - $(this.id).find('.MPlayer-control').height()) / 2
+                    top: (this.screen.height - $(this.configs.el).height() - $(this.id).find('.MPlayer-control').height()) / 2
                 });
                 break;
             case 'landscape-full':
                 $(this.id).addClass('MPlayer-fullScreen');
                 $(this.id).find('.MPlayer-player').css({
-                    height: screen.height,
+                    height: (this.isIOS() ? this.screen.width - this.screen.toolBarHeight : this.screen.width),
                     top: 0
                 });
                 break;
