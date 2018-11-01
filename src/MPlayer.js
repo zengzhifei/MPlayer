@@ -49,6 +49,10 @@ class MPlayer {
         return mPlayerInstance[this.id].danmaku.danmakuSwitch;
     }
 
+    getDanmakuPoolSize() {
+        return mPlayerInstance[this.id].danmaku.danmakuListSize;
+    }
+
     playVideo() {
         mPlayerInstance[this.id].controlVideo('play');
     }
@@ -91,6 +95,30 @@ class MPlayer {
 
     setVideo(name, value) {
         return mPlayerInstance[this.id].operateVideo(name, value);
+    }
+
+    lockVoice() {
+        mPlayerInstance[this.id].operateLock('voice', true);
+    }
+
+    unlockVoice() {
+        mPlayerInstance[this.id].operateLock('voice', false);
+    }
+
+    lockDanmaku() {
+        mPlayerInstance[this.id].operateLock('danmaku', true);
+    }
+
+    unlockDanmaku() {
+        mPlayerInstance[this.id].operateLock('danmaku', false);
+    }
+
+    lockScreen() {
+        mPlayerInstance[this.id].operateLock('screen', true);
+    }
+
+    unlockScreen() {
+        mPlayerInstance[this.id].operateLock('screen', false);
     }
 }
 

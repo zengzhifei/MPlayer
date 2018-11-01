@@ -16,6 +16,7 @@ class MPlayerCore {
                 src: '',
                 poster: '',
                 currentTime: 0,
+                whRatio: 0
             },
             controls: {
                 defaultVideoOrientation: 'landscape',
@@ -30,6 +31,7 @@ class MPlayerCore {
                 speed: 0,
                 easing: 'linear',
                 loop: false,
+                clearMemory: true,
                 fontSize: 16,
                 fontColor: '#FFF',
                 backgroundColor: 'rgba(179,179,115,0.6)',
@@ -50,6 +52,7 @@ class MPlayerCore {
 
         this.danmaku = {
             danmakuList: [],
+            danmakuListSize: 0,
             newPointer: -1,
             currentPointer: 0,
             danmakuState: false,
@@ -87,7 +90,9 @@ class MPlayerCore {
 
     addDanmaku(options) {
         if (this.danmaku.danmakuSwitch && utils.isArray(options) && options.length) {
-            this.danmaku.danmakuList[++this.danmaku.newPointer] = this._filterDanmaku(options);
+            let danmakuList = this._filterDanmaku(options);
+            this.danmaku.danmakuList[++this.danmaku.newPointer] = danmakuList;
+            this.danmaku.danmakuListSize += danmakuList.length;
             if (!this.danmaku.danmakuState) {
                 this.danmaku.danmakuState = true;
                 this._runDanmaku();
@@ -213,6 +218,20 @@ class MPlayerCore {
         }
     }
 
+    operateLock(name, lock = false) {
+        switch (name) {
+            case 'voice':
+                utils.isBoolean(lock) && lock ? $(this.id).find('.MPlayer-control-voice').css('pointer-events', 'none') : $(this.id).find('.MPlayer-control-voice').css('pointer-events', '');
+                break;
+            case 'danmaku':
+                utils.isBoolean(lock) && lock ? $(this.id).find('.MPlayer-control-danmaku').css('pointer-events', 'none') : $(this.id).find('.MPlayer-control-danmaku').css('pointer-events', '');
+                break;
+            case 'screen':
+                utils.isBoolean(lock) && lock ? $(this.id).find('.MPlayer-control-screen').css('pointer-events', 'none') : $(this.id).find('.MPlayer-control-screen').css('pointer-events', '');
+                break;
+        }
+    }
+
     _render() {
         if (utils.isObject(this.configs.video)) {
             this._renderVideo(this.configs.video);
@@ -237,6 +256,9 @@ class MPlayerCore {
             'x5-video-player-fullscreen': true,
             'x5-video-ignore-metadata': true,
         });
+        if (utils.isNumber(options.whRatio) && options.whRatio > 0) {
+            $(this.configs.el).css('height', ($(this.configs.el).width() / options.whRatio) + $(this.id).find('.MPlayer-control').height());
+        }
         if (video[0].paused) {
             video.attr(options);
         } else {
@@ -534,14 +556,15 @@ class MPlayerCore {
 
     _runDanmaku() {
         if (this.danmaku.currentPointer <= this.danmaku.newPointer) {
-            this.log(`第${this.danmaku.currentPointer}轮开始`);
+            this.log(`round: ${this.danmaku.currentPointer} starting...`);
             let currentDanmakuList = this.danmaku.danmakuList[this.danmaku.currentPointer];
+            utils.isBoolean(this.configs.danmaku.clearMemory) && this.configs.danmaku.clearMemory && delete this.danmaku.danmakuList[this.danmaku.currentPointer] && (this.danmaku.danmakuListSize -= currentDanmakuList.length);
             let run = (i) => {
                 if (i < currentDanmakuList.length) {
-                    this.log(`内部指针:${i}`);
+                    this.log(`point: ${i} running...`);
                     let danmakuRowID = [];
                     for (let j = 0, k = 1; this.danmaku.danmakuSwitch && j < this.configs.danmaku.maxRows && i + j < currentDanmakuList.length; j++, k++) {
-                        this.log(`第${i + k}条`);
+                        this.log(`order: ${i + k}`);
                         danmakuRowID[j] = utils.getUniqueID();
                         setTimeout(() => {
                             let danmakuRow = `<span class="MPlayer-player-danmaku-row" id="MPlayer-player-danmaku-row-${danmakuRowID[j]}"></span>`;

@@ -52,6 +52,8 @@ Git下载：
                     poster: '',
                     //视频初始播放时刻
                     currentTime: 0,
+                    //视频源宽高比例 int
+                    whRatio:0,
                 },
                 // 播放器控件配置
                 controls: {
@@ -78,6 +80,8 @@ Git下载：
                     easing: 'linear',
                     //是否循环弹幕列表
                     loop: false,
+                    // 是否自动释放内存(true模式下，loop不可用)
+                    clearMemory: true,
                     //弹幕显示字体大小
                     fontSize: 16,
                     //弹幕显示字体颜色
@@ -162,6 +166,12 @@ Git下载：
         mPlayer.getDanmakuStatus();
         
         /**
+         * 获取弹幕池大小
+         * return int
+         */
+        mPlayer.getDanmakuPoolSize();
+        
+        /**
          * 监听播放器事件，支持video所有原生事件
          * param: event[string,object] 事件名 例如:play,pause...
          * param: fn[function] 事件响应回调函数
@@ -228,6 +238,36 @@ Git下载：
           * @param value 属性值
           */
          mPlayer.setVideo(name,value);
+         
+        /**
+         * 弹幕状态加锁
+         */
+        mPlayer.lockDanmaku();
+        
+        /**
+         * 弹幕状态解锁
+         */
+        mPlayer.unlockDanmaku();
+        
+        /**
+         * 声音状态加锁
+         */
+        mPlayer.lockVoice();
+        
+        /**
+         * 声音状态解锁
+         */
+        mPlayer.unlockVoice();
+        
+        /**
+         * 屏幕状态加锁
+         */
+        mPlayer.lockScreen();
+        
+        /**
+         * 屏幕状态解锁
+         */
+        mPlayer.unlockScreen();
     </script>
 ````
 
