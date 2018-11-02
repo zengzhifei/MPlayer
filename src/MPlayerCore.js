@@ -408,6 +408,13 @@ class MPlayerCore {
             that._controlVoice(false);
         }, false);
 
+        //click danmaku layer
+        danmaku[0].addEventListener('click', function () {
+            if (video.get(0).controls) {
+                video[0].paused ? video[0].play() : video[0].pause();
+            }
+        }, false);
+
         // click danmaku open btn
         openDanmaku[0].addEventListener('click', function () {
             openDanmaku.addClass('MPlayer-control-not-active');

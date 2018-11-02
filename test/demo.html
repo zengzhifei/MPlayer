@@ -33,7 +33,7 @@
         },
         controls: {
             //defaultVideoOrientation: 'portrait',
-            defaultDanmakuSwitch: false
+            defaultDanmakuSwitch: true
         },
         danmaku: {
             clearMemory: true,
@@ -52,7 +52,7 @@
 
     setInterval(function () {
         mPlayer.getDanmakuStatus() && getDanmakuList(mPlayer);
-    }, 100);
+    }, 3000);
 
     setTimeout(function () {
         mPlayer.lockVoice();
