@@ -257,7 +257,7 @@ class MPlayerCore {
             'x5-video-ignore-metadata': true,
         });
         if (utils.isNumber(options.whRatio) && options.whRatio > 0) {
-            $(this.configs.el).css('height', ($(this.configs.el).width() / options.whRatio) + $(this.id).find('.MPlayer-control').height());
+            $(this.configs.el).css('height', ($(this.configs.el).width() / options.whRatio) + (utils.isBoolean(options.controls) && options.controls ? 0 : $(this.id).find('.MPlayer-control').height()));
         }
         if (video[0].paused) {
             video.attr(options);
