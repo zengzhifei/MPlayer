@@ -16,7 +16,7 @@ class MPlayerCore {
                 src: '',
                 poster: '',
                 currentTime: 0,
-                whRatio: 0
+                whRatio: 0,
             },
             controls: {
                 defaultVideoOrientation: 'landscape',
@@ -24,6 +24,11 @@ class MPlayerCore {
                 defaultVoiceSwitch: true,
                 defaultScreenFull: false,
                 backgroundColor: '',
+                showDanmakuBtn: true,
+                showVoiceBtn: true,
+                showScreenBtn: true,
+                showPlaybackBtn: true,
+                showReloadBtn: true,
             },
             danmaku: {
                 maxRows: 3,
@@ -36,7 +41,7 @@ class MPlayerCore {
                 fontColor: '#FFF',
                 backgroundColor: 'rgba(179,179,115,0.6)',
                 myBackgroundColor: 'rgba(0,205,0,0.6)',
-                filterKeyWords: []
+                filterKeyWords: [],
             }
         };
 
@@ -60,7 +65,7 @@ class MPlayerCore {
             danmakuFilterRegExp: null,
         };
 
-        if (this.isIOS()) {
+        if (this._isIOS()) {
             this.screen = {
                 width: (window.orientation === 0 || window.orientation === 180 ? $(window).width() : screen.width),
                 height: (window.orientation === 0 || window.orientation === 180 ? $(window).height() : screen.height - (screen.width - $(window).height())),
@@ -255,6 +260,7 @@ class MPlayerCore {
             'x-webkit-airplay': true,
             'x5-video-player-fullscreen': true,
             'x5-video-ignore-metadata': true,
+            'controlslist': 'nodownload',
         });
         if (utils.isNumber(options.whRatio) && options.whRatio > 0) {
             $(this.configs.el).css('height', ($(this.configs.el).width() / options.whRatio) + (utils.isBoolean(options.controls) && options.controls ? 0 : $(this.id).find('.MPlayer-control').height()));
@@ -270,12 +276,17 @@ class MPlayerCore {
 
     _renderControls(options = {}) {
         let video = $(this.id).find('.MPlayer-player-video'),
+            videoReload = $(this.id).find('.MPlayer-control-video-reload'),
+            danmaku = $(this.id).find('.MPlayer-control-danmaku'),
             openDanmaku = $(this.id).find('.MPlayer-control-danmaku-open'),
             closeDanmaku = $(this.id).find('.MPlayer-control-danmaku-close'),
+            voice = $(this.id).find('.MPlayer-control-voice'),
             openVoice = $(this.id).find('.MPlayer-control-voice-open'),
             closeVoice = $(this.id).find('.MPlayer-control-voice-close'),
+            screen = $(this.id).find('.MPlayer-control-screen'),
             fullScreen = $(this.id).find('.MPlayer-control-screen-full'),
             middleScreen = $(this.id).find('.MPlayer-control-screen-middle'),
+            playback = $(this.id).find('.MPlayer-control-playback'),
             control = $(this.id).find('.MPlayer-control'),
             controlLeft = $(this.id).find('.MPlayer-control-left'),
             controlMiddle = $(this.id).find('.MPlayer-control-middle'),
@@ -312,6 +323,23 @@ class MPlayerCore {
         if (utils.isString(options.backgroundColor) && options.backgroundColor) {
             control.css({backgroundColor: options.backgroundColor});
         }
+        if (utils.isBoolean(options.showScreenBtn) && !options.showScreenBtn) {
+            screen.addClass('MPlayer-control-not-active');
+        }
+        if (utils.isBoolean(options.showPlaybackBtn) && !options.showPlaybackBtn) {
+            playback.addClass('MPlayer-control-not-active');
+        }
+        if (utils.isBoolean(options.showDanmakuBtn) && !options.showDanmakuBtn) {
+            danmaku.addClass('MPlayer-control-not-active');
+        }
+        if (utils.isBoolean(options.showVoiceBtn) && !options.showVoiceBtn) {
+            voice.addClass('MPlayer-control-not-active');
+        }
+        if (utils.isBoolean(options.showReloadBtn) && !options.showReloadBtn) {
+            videoReload.addClass('MPlayer-control-not-active');
+        }
+
+        controlMiddle.css({width: control.width() - controlLeft.width() - controlRight.width() - 3});
     }
 
     _renderDanmaku(options = {}) {
@@ -336,7 +364,8 @@ class MPlayerCore {
             openDanmaku = $(this.id).find('.MPlayer-control-danmaku-open'),
             closeDanmaku = $(this.id).find('.MPlayer-control-danmaku-close'),
             fullScreen = $(this.id).find('.MPlayer-control-screen-full'),
-            middleScreen = $(this.id).find('.MPlayer-control-screen-middle');
+            middleScreen = $(this.id).find('.MPlayer-control-screen-middle'),
+            playback = $(this.id).find('.MPlayer-control-playback');
 
         // click state btn
         state[0].addEventListener('click', function () {
@@ -469,6 +498,20 @@ class MPlayerCore {
             }
         }, false);
 
+        // click playback btn
+        playback.each(function (index, item) {
+            item.addEventListener('click', function () {
+                for (let i = 0; i < playback.length; i++) {
+                    if (Number(this.dataset.target) === i) {
+                        $(playback[i]).removeClass('MPlayer-control-not-active');
+                    } else {
+                        $(playback[i]).addClass('MPlayer-control-not-active');
+                    }
+                }
+                video.get(0)['playbackRate'] = Number(this.dataset.rate);
+            }, false);
+        });
+
         // listen screen change
         window.addEventListener("orientationchange", function (e) {
             if (video.data('orientation') !== 'portrait') {
@@ -479,6 +522,15 @@ class MPlayerCore {
                 }
             }
         }, false);
+
+        // listen screen size change
+        ['fullscreenchange', 'mozfullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange'].forEach(function (event) {
+            document.addEventListener(event, function (e) {
+                if (!that._isFullScreen()) {
+                    that.controlScreen('middle');
+                }
+            }, false);
+        });
 
         // listen x5 enter full screen
         video[0].addEventListener('x5videoenterfullscreen', function () {
@@ -496,9 +548,33 @@ class MPlayerCore {
         return ua.indexOf('micromessenger') > -1;
     }
 
-    isIOS() {
+    _isIOS() {
         let ua = navigator.userAgent.toLowerCase();
         return /iphone|ipad|ipod/.test(ua);
+    }
+
+    _isPc() {
+        let ua = navigator.userAgent;
+        return !/Android|webOS|iPhone|iPod|BlackBerry/i.test(ua);
+    }
+
+    _isFullScreen() {
+        return document.webkitIsFullScreen || document.fullscreenElement;
+    }
+
+    _pcEnterFullScreen(element) {
+        let requestMethod = element.requestFullScreen ||
+            element.webkitRequestFullScreen ||
+            element.mozRequestFullScreen ||
+            element.msRequestFullScreen;
+        if (requestMethod) {
+            requestMethod.call(element);
+        } else if (typeof window.ActiveXObject !== "undefined") {
+            let wscript = new ActiveXObject("WScript.Shell");
+            if (wscript !== null) {
+                wscript.SendKeys("{F11}");
+            }
+        }
     }
 
     _controlVoice(muted = true) {
@@ -534,13 +610,15 @@ class MPlayerCore {
                     height: $(this.configs.el).height() - $(this.id).find('.MPlayer-control').height(),
                     top: (this.screen.height - $(this.configs.el).height() - $(this.id).find('.MPlayer-control').height()) / 2
                 });
+                this._isPc() && this._pcEnterFullScreen($(this.id).find('video').get(0));
                 break;
             case 'landscape-full':
                 $(this.id).addClass('MPlayer-fullScreen');
                 $(this.id).find('.MPlayer-player').css({
-                    height: (this.isIOS() ? this.screen.width - this.screen.toolBarHeight : this.screen.width),
+                    height: (this._isIOS() ? this.screen.width - this.screen.toolBarHeight : this.screen.width),
                     top: 0
                 });
+                this._isPc() && this._pcEnterFullScreen($(this.id).find('video').get(0));
                 break;
         }
     }

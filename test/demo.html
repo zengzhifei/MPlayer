@@ -29,11 +29,16 @@
             //src: 'http://223.110.245.147/ott.js.chinamobile.com/PLTV/3/224/3221226799/index.m3u8',
             //宽高比
             whRatio: 16 / 9,
-            controls: true,
+            controls: false
         },
         controls: {
             //defaultVideoOrientation: 'portrait',
-            defaultDanmakuSwitch: true
+            defaultDanmakuSwitch: false,
+            // showPlaybackBtn: false,
+            // showReloadBtn: false,
+            // showScreenBtn: false,
+            // showVoiceBtn: false,
+            // showDanmakuBtn: false,
         },
         danmaku: {
             clearMemory: true,
@@ -42,24 +47,24 @@
 
     console.log(mPlayer);
 
-    mPlayer.extend('comment', 'icon-1', function () {
-        alert('comment');
-    }).innerHTML = '点我评论';
-
-    mPlayer.addExtender('', function () {
-        alert('custom');
-    }).innerText = '电视直播中...';
-
-    setInterval(function () {
-        mPlayer.getDanmakuStatus() && getDanmakuList(mPlayer);
-    }, 3000);
-
-    setTimeout(function () {
-        mPlayer.lockVoice();
-        setTimeout(function () {
-            mPlayer.unlockVoice();
-        }, 3000);
-    }, 3000);
+    // mPlayer.extend('comment', 'icon-1', function () {
+    //     alert('comment');
+    // }).innerHTML = '点我评论';
+    //
+    // mPlayer.addExtender('', function () {
+    //     alert('custom');
+    // }).innerText = '电视直播中...';
+    //
+    // setInterval(function () {
+    //     mPlayer.getDanmakuStatus() && getDanmakuList(mPlayer);
+    // }, 3000);
+    //
+    // setTimeout(function () {
+    //     mPlayer.lockVoice();
+    //     setTimeout(function () {
+    //         mPlayer.unlockVoice();
+    //     }, 3000);
+    // }, 3000);
 
     /*  setTimeout(function () {
           mPlayer.playVideo();
